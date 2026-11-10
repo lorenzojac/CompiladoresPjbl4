@@ -1,0 +1,14 @@
+inteira principal() @ [
+    pinomodo(25, 1);
+    pinomodo(15, 2);
+    imprime("pressione o botao no GP15 (ligado ao GND)");
+    durante (VER) edai [
+        cond (pinole(15) == 0) edai [
+            pinoescreve(25, 1);
+        ]
+        casocontrario edai [
+            pinoescreve(25, 0);
+        ]
+        espera(10);
+    ]
+]

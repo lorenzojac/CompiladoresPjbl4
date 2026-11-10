@@ -1,0 +1,15 @@
+[pino 25: saida]
+[pino 25 <- 1]
+[pino 25 <- 0]
+piscada
+1
+[pino 25 <- 1]
+[pino 25 <- 0]
+piscada
+2
+[pino 25 <- 1]
+[pino 25 <- 0]
+piscada
+3
+fim do pisca
+[saida 0]

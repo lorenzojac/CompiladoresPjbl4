@@ -1,0 +1,15 @@
+inteira principal() @ [
+    inteira i;
+
+    pinomodo(25, 1);
+    repete (i receba 1, i < 4, i receba i + 1) edai [
+        pinoescreve(25, 1);
+        espera(250);
+        pinoescreve(25, 0);
+        espera(250);
+        imprime("piscada");
+        imprime(i);
+    ]
+    imprime("fim do pisca");
+    respost 0;
+]

@@ -1,0 +1,7 @@
+inteira vet{120000} amostras;
+
+inteira principal() @ [
+    amostras{0} receba 1;
+    imprime(amostras{0});
+    respost 0;
+]

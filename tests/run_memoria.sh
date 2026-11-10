@@ -5,7 +5,7 @@
 #
 # Compila uma copia instrumentada do compilador (tests/contador_alocacoes.c,
 # ld --wrap) e roda todos os programas de teste, validos e invalidos, nos
-# alvos pc e uno e sem -q (relatorio completo). Em cada execucao, todo bloco
+# alvos pc, uno e pico e sem -q (relatorio completo). Em cada execucao, todo bloco
 # alocado dentro de main deve ter sido liberado (0 vivos no fim).
 set -u
 
@@ -32,7 +32,7 @@ for programa in "$RAIZ"/tests/validos/*.mac "$RAIZ"/tests/invalidos/*.mac \
     "$RAIZ"/tests/dsl/invalidos/*.mac "$RAIZ"/tests/placa/*.mac \
     "$RAIZ"/tests/placa/invalidos/*.mac "$RAIZ"/tests/placa/manual/*.mac; do
     [ -f "$programa" ] || continue
-    for opcoes in "--alvo=pc -q" "--alvo=uno -q" "--alvo=pc"; do
+    for opcoes in "--alvo=pc -q" "--alvo=uno -q" "--alvo=pico -q" "--alvo=pc"; do
         # shellcheck disable=SC2086
         linha=$("$BIN" "$programa" -o "$SAIDA/saida.ll" $opcoes 2>&1 > /dev/null |
             grep "^\[memoria\]")

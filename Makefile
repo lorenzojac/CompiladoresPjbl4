@@ -7,11 +7,16 @@
 #   make diferencial  teste diferencial longo (N=300 programas aleatorios)
 #   make runtime      build/zl_runtime_posix.bc, para lli --extra-module=
 #   make bench        estudo de otimizacao C0-C3 (PjBL 4, Parte C)
-#   make placa PROG=tests/placa/01_laco_vetor.mac   gera placa/<nome>.hex
-#   make gravar PROG=... PORTA=COM3                  grava no Arduino Uno
+#
+# Placa (PLACA=pico, padrao: Raspberry Pi Pico 2 W; PLACA=uno: Arduino Uno):
+#   make placa PROG=tests/placa/01_laco_vetor.mac   gera placa/<nome>.uf2
+#   make gravar PROG=...  [PORTA=COM5]               grava na placa
+#   make monitor [PORTA=COM5]                        terminal da placa (USB)
+#   make test-pico    programas de tests/placa rodando na Pico conectada
 #
 # Ferramentas: por padrao vem do PATH. Para usar versoes com sufixo
 # (Ubuntu: clang-18, mlir-opt-18), passe LLVM_BIN=/usr/lib/llvm-18/bin/.
+# Pico SDK: PICO_SDK_PATH ou um dos lugares de scripts/pico_sdk.sh.
 
 CC ?= cc
 CFLAGS ?=
@@ -32,13 +37,16 @@ AVR_OBJCOPY ?= avr-objcopy
 AVR_SIZE ?= avr-size
 AVRDUDE ?= avrdude
 QEMU_AVR ?= qemu-system-avr
+CMAKE ?= cmake
+ARM_SIZE ?= arm-none-eabi-size
 PYTHON ?= python3
-PORTA ?= /dev/ttyACM0
+PLACA ?= pico
+PORTA ?=
 PROG ?= tests/placa/01_laco_vetor.mac
 N ?= 300
 
 export CLANG LLC LLI LLVM_AS LLVM_LINK OPT MLIR_OPT MLIR_TRANSLATE MLIR_RUNNER
-export AVR_GCC AVR_OBJCOPY AVR_SIZE QEMU_AVR
+export AVR_GCC AVR_OBJCOPY AVR_SIZE QEMU_AVR CMAKE
 
 CPPFLAGS = -Isrc
 BUILD_DIR = build
@@ -76,7 +84,8 @@ TEM_QEMU := $(shell command -v $(QEMU_AVR) 2>/dev/null)
 
 .PHONY: all test test-unit test-lexer test-parser test-semantic \
 	test-programs test-execucao test-dsl test-jit test-diferencial test-memoria \
-	test-placa test-placa-uno diferencial bench placa gravar runtime clean
+	test-placa test-placa-uno test-pico diferencial bench placa gravar monitor \
+	runtime clean
 
 all: $(APP_BIN)
 
@@ -141,6 +150,7 @@ test-memoria:
 
 test-placa: $(APP_BIN)
 	ALVO=uno sh tests/run_execucao.sh tests/placa
+	ALVO=pico sh tests/run_execucao.sh tests/placa/pico
 
 # No Uno emulado: programas da placa em C0 e com os nucleos vetorizados (C2),
 # e todos os programas de tests/execucao (mesma saida do PC).
@@ -148,6 +158,14 @@ test-placa-uno: $(APP_BIN)
 	CONFIG=C0 $(PYTHON) tests/run_placa.py tests/placa
 	CONFIG=C2 $(PYTHON) tests/run_placa.py tests/placa
 	CONFIG=C0 $(PYTHON) tests/run_placa.py tests/execucao
+
+# Na Raspberry Pi Pico 2 W de verdade (conectada pela USB; nao faz parte do
+# make test): grava cada programa, le a saida pela USB e compara. Programas
+# da placa em C0 e C2 e todos os de tests/execucao (mesma saida do PC).
+test-pico: $(APP_BIN)
+	CONFIG=C0 $(PYTHON) tests/run_pico.py tests/placa tests/placa/pico
+	CONFIG=C2 $(PYTHON) tests/run_pico.py tests/placa
+	CONFIG=C0 $(PYTHON) tests/run_pico.py tests/execucao
 
 TESTES_PC = test-unit test-programs test-execucao test-dsl test-jit \
 	test-diferencial test-memoria test-placa
@@ -169,17 +187,40 @@ $(BUILD_DIR)/zl_runtime_posix.bc: runtime/zl_runtime_posix.c runtime/zl_runtime_
 bench: $(APP_BIN)
 	$(PYTHON) scripts/bench/bench.py
 
-# make placa PROG=programa.mac -> placa/<programa>.hex (Arduino Uno)
-placa: $(APP_BIN)
-	sh scripts/construir.sh $(PROG) $(BUILD_DIR)/placa uno
-	mkdir -p placa
-	cp $(BUILD_DIR)/placa/$(basename $(notdir $(PROG))).hex placa/
-	$(AVR_SIZE) $(BUILD_DIR)/placa/$(basename $(notdir $(PROG))).elf
-	@echo "Executavel: placa/$(basename $(notdir $(PROG))).hex"
+NOME_PROG = $(basename $(notdir $(PROG)))
+DIR_PLACA = $(BUILD_DIR)/placa-$(PLACA)
 
+# make placa PROG=programa.mac
+#   PLACA=pico (padrao) -> placa/<programa>.uf2 (Raspberry Pi Pico 2 W)
+#   PLACA=uno           -> placa/<programa>.hex (Arduino Uno)
+placa: $(APP_BIN)
+	sh scripts/construir.sh $(PROG) $(DIR_PLACA) $(PLACA)
+	mkdir -p placa
+ifeq ($(PLACA),uno)
+	cp $(DIR_PLACA)/$(NOME_PROG).hex placa/
+	$(AVR_SIZE) $(DIR_PLACA)/$(NOME_PROG).elf
+	@echo "Executavel: placa/$(NOME_PROG).hex"
+else
+	cp $(DIR_PLACA)/$(NOME_PROG).uf2 placa/
+	$(ARM_SIZE) $(DIR_PLACA)/$(NOME_PROG).elf
+	@echo "Executavel: placa/$(NOME_PROG).uf2"
+endif
+
+# Pico: copia o .uf2 para a unidade RP2350 (na primeira vez, conectar com
+# BOOTSEL apertado; depois o script reinicia a placa sozinho pela USB).
+# Uno: avrdude pelo bootloader (clones antigos: -b 57600).
 gravar: placa
-	$(AVRDUDE) -c arduino -p atmega328p -P $(PORTA) -b 115200 \
-		-U flash:w:placa/$(basename $(notdir $(PROG))).hex:i
+ifeq ($(PLACA),uno)
+	$(AVRDUDE) -c arduino -p atmega328p -P $(or $(PORTA),/dev/ttyACM0) \
+		-b 115200 -U flash:w:placa/$(NOME_PROG).hex:i
+else
+	$(PYTHON) scripts/pico.py gravar placa/$(NOME_PROG).uf2 \
+		$(if $(PORTA),--porta $(PORTA))
+endif
+
+# Terminal da Pico pela USB: abrir roda o programa; fechar reinicia a placa.
+monitor:
+	$(PYTHON) scripts/pico.py monitor $(if $(PORTA),--porta $(PORTA))
 
 clean:
 	rm -rf $(BUILD_DIR) $(APP_BIN) $(APP_BIN).exe
