@@ -1,0 +1,14 @@
+inteira principal() @ [
+    pinomodo(13, 1);
+    pinomodo(2, 2);
+    imprime("pressione o botao no pino 2 (ligado ao GND)");
+    durante (VER) edai [
+        cond (pinole(2) == 0) edai [
+            pinoescreve(13, 1);
+        ]
+        casocontrario edai [
+            pinoescreve(13, 0);
+        ]
+        espera(10);
+    ]
+]

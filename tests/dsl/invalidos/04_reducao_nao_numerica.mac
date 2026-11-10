@@ -1,0 +1,8 @@
+bool vet{4} flags;
+
+inteira principal() @ [
+    inteira n;
+
+    n receba somavet(flags);
+    respost 0;
+]

@@ -1,0 +1,5 @@
+inteira principal(inteira n, flut f) @ [
+    imprime(n * 2);
+    imprime(f / 2);
+    respost n;
+]

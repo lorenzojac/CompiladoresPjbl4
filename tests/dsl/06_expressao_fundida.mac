@@ -1,0 +1,27 @@
+inteira vet{10} a, b, c;
+
+inteira principal() @ [
+    inteira i, k;
+    bool ok;
+
+    repete (i receba 0, i < 10, i receba i + 1) edai [
+        a{i} receba i;
+        b{i} receba 100 - i;
+        c{i} receba 1;
+    ]
+    k receba 2;
+    c receba a + k * b - c;
+    ok receba VER;
+    repete (i receba 0, i < 10, i receba i + 1) edai [
+        ok receba ok E (c{i} == i + 2 * (100 - i) - 1);
+    ]
+    imprime(c{0});
+    imprime(c{9});
+    imprime(ok);
+    a receba a + a;
+    imprime(a{9});
+    a receba a * a - a;
+    imprime(a{3});
+    imprime(somavet(a * b + c));
+    respost 0;
+]

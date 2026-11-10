@@ -1,0 +1,41 @@
+outrafuncao inteira fatorial(inteira n) @ [
+    cond (n < 2) edai [
+        respost 1;
+    ]
+    respost n * fatorial(n - 1);
+]
+
+outrafuncao inteira fibonacci(inteira n) @ [
+    cond (n < 2) edai [
+        respost n;
+    ]
+    respost fibonacci(n - 1) + fibonacci(n - 2);
+]
+
+outrafuncao bool par(inteira n) @ [
+    cond (n == 0) edai [
+        respost VER;
+    ]
+    respost impar(n - 1);
+]
+
+outrafuncao bool impar(inteira n) @ [
+    cond (n == 0) edai [
+        respost FAL;
+    ]
+    respost par(n - 1);
+]
+
+inteira principal() @ [
+    inteira i;
+
+    imprime(fatorial(5));
+    imprime(fatorial(12));
+    repete (i receba 0, i < 10, i receba i + 1) edai [
+        imprime(fibonacci(i));
+    ]
+    imprime(par(10));
+    imprime(impar(7));
+    imprime(par(7));
+    respost 0;
+]

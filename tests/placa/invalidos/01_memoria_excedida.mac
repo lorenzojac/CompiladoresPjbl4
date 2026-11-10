@@ -1,0 +1,19 @@
+inteira vet{200} historico;
+
+outrafuncao flut media() @ [
+    flut vet{300} amostras;
+    inteira i;
+    flut soma;
+
+    soma receba 0;
+    repete (i receba 0, i < 300, i receba i + 1) edai [
+        amostras{i} receba i;
+        soma receba soma + amostras{i};
+    ]
+    respost soma / 300;
+]
+
+inteira principal() @ [
+    imprime(media());
+    respost 0;
+]

@@ -1,0 +1,29 @@
+inteira principal() @ [
+    inteira i, j, soma, n;
+
+    soma receba 0;
+    repete (i receba 1, i < 11, i receba i + 1) edai [
+        soma receba soma + i;
+    ]
+    imprime(soma);
+    n receba 5;
+    durante (n > 0) edai [
+        imprime(n);
+        n receba n - 1;
+    ]
+    soma receba 0;
+    repete (i receba 0, i < 4, i receba i + 1) edai [
+        repete (j receba 0, j < 3, j receba j + 1) edai [
+            soma receba soma + i * j;
+        ]
+    ]
+    imprime(soma);
+    repete (i receba 10, i < 5, i receba i + 1) edai [
+        imprime("nunca");
+    ]
+    durante (FAL) edai [
+        imprime("nunca");
+    ]
+    imprime(i);
+    respost 0;
+]

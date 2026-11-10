@@ -1,0 +1,34 @@
+inteira vet{10} dados;
+
+outrafuncao inteira maior() @ [
+    inteira i, m;
+
+    m receba dados{0};
+    repete (i receba 1, i < 10, i receba i + 1) edai [
+        cond (dados{i} > m) edai [
+            m receba dados{i};
+        ]
+    ]
+    respost m;
+]
+
+inteira principal() @ [
+    inteira i, soma;
+    inteira vet{10} invertido;
+
+    repete (i receba 0, i < 10, i receba i + 1) edai [
+        dados{i} receba (i * 7) // 3 - i;
+    ]
+    soma receba 0;
+    repete (i receba 0, i < 10, i receba i + 1) edai [
+        soma receba soma + dados{i};
+        invertido{9 - i} receba dados{i};
+    ]
+    imprime(soma);
+    imprime(maior());
+    imprime(invertido{0});
+    imprime(invertido{9});
+    dados{3} receba 100;
+    imprime(maior());
+    respost 0;
+]

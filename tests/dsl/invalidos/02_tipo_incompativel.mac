@@ -1,0 +1,7 @@
+flut vet{4} f;
+inteira vet{4} a;
+
+inteira principal() @ [
+    a receba f * 2;
+    respost 0;
+]

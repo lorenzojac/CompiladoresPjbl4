@@ -1,0 +1,28 @@
+outrafuncao inteira mdc(inteira a, inteira b) @ [
+    cond (b == 0) edai [
+        respost a;
+    ]
+    respost mdc(b, a - (a // b) * b);
+]
+
+outrafuncao inteira hanoi(inteira n) @ [
+    cond (n == 0) edai [
+        respost 0;
+    ]
+    respost 2 * hanoi(n - 1) + 1;
+]
+
+outrafuncao duplocarpado potencia(duplocarpado base, inteira n) @ [
+    cond (n == 0) edai [
+        respost 1;
+    ]
+    respost base * potencia(base, n - 1);
+]
+
+inteira principal() @ [
+    imprime(mdc(1071, 462));
+    imprime(hanoi(16));
+    imprime(potencia(1.5, 10));
+    imprime(raiz(potencia(2, 20)));
+    respost 0;
+]

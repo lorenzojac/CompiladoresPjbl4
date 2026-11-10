@@ -1,0 +1,6 @@
+inteira vet{4} a, b, c;
+
+inteira principal() @ [
+    c receba a // b;
+    respost 0;
+]

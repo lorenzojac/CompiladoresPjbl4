@@ -1,0 +1,6 @@
+remark: <unknown>:0:0: vectorized loop (vectorization width: 8, interleaved count: 4) [-Rpass=loop-vectorize]
+remark: <unknown>:0:0: vectorized loop (vectorization width: 8, interleaved count: 4) [-Rpass=loop-vectorize]
+remark: <unknown>:0:0: loop not vectorized: cannot prove it is safe to reorder floating-point operations; allow reordering by specifying '#pragma clang loop vectorize(enable)' before the loop or by providing the compiler option '-ffast-math' [-Rpass-analysis=loop-vectorize]
+remark: <unknown>:0:0: loop not vectorized [-Rpass-missed=loop-vectorize]
+remark: <unknown>:0:0: loop not vectorized: cannot prove it is safe to reorder floating-point operations; allow reordering by specifying '#pragma clang loop vectorize(enable)' before the loop or by providing the compiler option '-ffast-math' [-Rpass-analysis=loop-vectorize]
+remark: <unknown>:0:0: loop not vectorized [-Rpass-missed=loop-vectorize]

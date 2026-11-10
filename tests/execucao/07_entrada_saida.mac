@@ -1,0 +1,24 @@
+inteira principal() @ [
+    inteira n, i, soma;
+    flut media;
+    palavra nome;
+    bool ok;
+
+    le(nome);
+    le(n);
+    soma receba 0;
+    repete (i receba 0, i < n, i receba i + 1) edai [
+        inteira x;
+
+        le(x);
+        soma receba soma + x;
+    ]
+    le(ok);
+    media receba soma / n;
+    imprime("Ola,");
+    imprime(nome);
+    imprime(soma);
+    imprime(media);
+    imprime(ok);
+    respost 0;
+]

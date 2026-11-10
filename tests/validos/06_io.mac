@@ -1,0 +1,8 @@
+inteira principal() @ [
+    inteira valor;
+
+    le(valor);
+    imprime(valor);
+
+    respost valor;
+]

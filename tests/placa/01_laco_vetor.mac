@@ -1,0 +1,39 @@
+inteira vet{10} primos;
+
+outrafuncao bool ehprimo(inteira n) @ [
+    inteira d;
+
+    cond (n < 2) edai [
+        respost FAL;
+    ]
+    d receba 2;
+    durante (d * d < n + 1) edai [
+        cond ((n // d) * d == n) edai [
+            respost FAL;
+        ]
+        d receba d + 1;
+    ]
+    respost VER;
+]
+
+inteira principal() @ [
+    inteira n, achados, soma, i;
+
+    achados receba 0;
+    n receba 2;
+    durante (achados < 10) edai [
+        cond (ehprimo(n)) edai [
+            primos{achados} receba n;
+            achados receba achados + 1;
+        ]
+        n receba n + 1;
+    ]
+    soma receba 0;
+    repete (i receba 0, i < 10, i receba i + 1) edai [
+        imprime(primos{i});
+        soma receba soma + primos{i};
+    ]
+    imprime("soma dos 10 primeiros primos:");
+    imprime(soma);
+    respost 0;
+]

@@ -1,0 +1,18 @@
+flut vet{16} sinal, janela, saida;
+duplocarpado vet{16} acumulado;
+
+inteira principal() @ [
+    inteira i;
+
+    repete (i receba 0, i < 16, i receba i + 1) edai [
+        sinal{i} receba (i * 7) // 5 - 4;
+        janela{i} receba 1 - (i - 8) * (i - 8) / 64;
+    ]
+    saida receba sinal * janela;
+    imprime(somavet(saida));
+    imprime(maxvet(saida));
+    imprime(prodesc(sinal, janela));
+    acumulado receba saida * 0.25;
+    imprime(somavet(acumulado));
+    respost 0;
+]

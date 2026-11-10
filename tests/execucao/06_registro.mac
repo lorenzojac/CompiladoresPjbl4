@@ -1,0 +1,43 @@
+registro Aluno @ [
+    inteira matricula;
+    flut nota;
+    bool aprovado;
+]
+
+registro Aluno melhor;
+
+outrafuncao vazio mostra(inteira m, flut n, bool a) @ [
+    imprime(m);
+    imprime(n);
+    imprime(a);
+]
+
+inteira principal() @ [
+    registro Aluno vet{3} turma;
+    registro Aluno x;
+    inteira i;
+    flut soma;
+
+    turma{0}.matricula receba 101;
+    turma{0}.nota receba 7.5;
+    turma{1}.matricula receba 102;
+    turma{1}.nota receba 4.25;
+    turma{2}.matricula receba 103;
+    turma{2}.nota receba 9;
+    soma receba 0;
+    repete (i receba 0, i < 3, i receba i + 1) edai [
+        turma{i}.aprovado receba turma{i}.nota > 6;
+        soma receba soma + turma{i}.nota;
+        cond (turma{i}.nota > melhor.nota) edai [
+            melhor receba turma{i};
+        ]
+    ]
+    mostra(melhor.matricula, melhor.nota, melhor.aprovado);
+    imprime(soma / 3);
+    x receba turma{1};
+    x.nota receba x.nota + 1;
+    imprime(x.nota);
+    imprime(turma{1}.nota);
+    imprime(turma{1}.aprovado);
+    respost 0;
+]

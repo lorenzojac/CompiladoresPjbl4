@@ -1,0 +1,11 @@
+inteira principal() @ [
+    inteira resultado;
+
+    resultado receba soma(2, 3);
+
+    respost resultado;
+]
+
+outrafuncao inteira soma(inteira a, inteira b) @ [
+    respost a + b;
+]

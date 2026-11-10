@@ -1,0 +1,28 @@
+inteira vet{12} a, triplo;
+flut vet{12} metade;
+
+inteira principal() @ [
+    inteira i, k;
+    bool ok;
+
+    repete (i receba 0, i < 12, i receba i + 1) edai [
+        a{i} receba i * i - 5;
+    ]
+    triplo receba 3 * a;
+    metade receba a * 0.5;
+    ok receba VER;
+    repete (i receba 0, i < 12, i receba i + 1) edai [
+        ok receba ok E (triplo{i} == 3 * a{i}) E (metade{i} == a{i} * 0.5);
+    ]
+    imprime(triplo{11});
+    imprime(metade{1});
+    imprime(ok);
+    k receba 10;
+    triplo receba a * k + 1;
+    imprime(triplo{3});
+    triplo receba -a;
+    imprime(triplo{0});
+    triplo receba 7;
+    imprime(triplo{5});
+    respost 0;
+]

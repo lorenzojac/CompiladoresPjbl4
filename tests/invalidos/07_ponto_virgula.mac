@@ -1,0 +1,8 @@
+inteira principal() @ [
+    inteira a
+    inteira b;
+
+    b receba 2;
+    a receba b * 3
+    respost a;
+]

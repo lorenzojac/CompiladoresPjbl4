@@ -1,0 +1,15 @@
+inteira vet{5} v;
+
+inteira principal() @ [
+    inteira i;
+
+    repete (i receba 0, i < 5, i receba i + 1) edai [
+        v{i} receba i * 10;
+    ]
+    imprime(v{4});
+    i receba 5;
+    imprime("antes do erro");
+    imprime(v{i});
+    imprime("nunca");
+    respost 0;
+]

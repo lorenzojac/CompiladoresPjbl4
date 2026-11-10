@@ -1,0 +1,7 @@
+flut vet{1024} a, b, c;
+
+inteira principal() @ [
+    c receba a + b;
+    imprime(somavet(c));
+    respost 0;
+]

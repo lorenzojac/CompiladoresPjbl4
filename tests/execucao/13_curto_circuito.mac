@@ -1,0 +1,27 @@
+inteira chamadas;
+
+outrafuncao bool marca(bool v) @ [
+    chamadas receba chamadas + 1;
+    respost v;
+]
+
+inteira principal() @ [
+    bool r;
+    inteira vet{3} v;
+    inteira i;
+
+    r receba FAL E marca(VER);
+    imprime(chamadas);
+    r receba VER OU marca(VER);
+    imprime(chamadas);
+    r receba VER E marca(FAL);
+    imprime(chamadas);
+    imprime(r);
+    i receba 5;
+    r receba (i < 3) E (v{i} > 0);
+    imprime(r);
+    imprime(VER XOR VER);
+    imprime(VER XOR FAL);
+    imprime(NÃO (FAL OU FAL));
+    respost 0;
+]

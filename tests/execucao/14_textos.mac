@@ -1,0 +1,25 @@
+palavra saudacao;
+
+outrafuncao palavra escolhe(bool formal) @ [
+    cond (formal) edai [
+        respost "Bom dia";
+    ]
+    respost "Oi";
+]
+
+inteira principal() @ [
+    palavra a, b;
+
+    imprime(saudacao == "");
+    a receba "abc";
+    b receba "ab";
+    imprime(a == b);
+    b receba "abc";
+    imprime(a == b);
+    imprime(a ! "xyz");
+    saudacao receba escolhe(VER);
+    imprime(saudacao);
+    imprime(escolhe(FAL));
+    imprime("aspas: ' e barra: \\");
+    respost 0;
+]

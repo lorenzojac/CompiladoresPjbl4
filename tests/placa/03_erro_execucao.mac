@@ -1,0 +1,23 @@
+inteira vet{4} leituras;
+
+outrafuncao inteira media(inteira n) @ [
+    inteira i, soma;
+
+    soma receba 0;
+    repete (i receba 0, i < n, i receba i + 1) edai [
+        soma receba soma + leituras{i};
+    ]
+    respost soma // n;
+]
+
+inteira principal() @ [
+    inteira i;
+
+    repete (i receba 0, i < 4, i receba i + 1) edai [
+        leituras{i} receba 10 * (i + 1);
+    ]
+    imprime(media(4));
+    imprime(media(0));
+    imprime("nao chega aqui");
+    respost 0;
+]

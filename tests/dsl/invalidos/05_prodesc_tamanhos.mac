@@ -1,0 +1,6 @@
+inteira vet{3} a;
+inteira vet{4} b;
+
+inteira principal() @ [
+    respost prodesc(a, b);
+]

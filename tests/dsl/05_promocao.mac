@@ -1,0 +1,21 @@
+inteira vet{6} i6;
+flut vet{6} f6;
+duplocarpado vet{6} d6;
+
+inteira principal() @ [
+    inteira i;
+
+    repete (i receba 0, i < 6, i receba i + 1) edai [
+        i6{i} receba i + 1;
+        f6{i} receba i / 2;
+    ]
+    f6 receba i6 + f6;
+    imprime(f6{5});
+    d6 receba f6 * i6;
+    imprime(d6{5});
+    d6 receba d6 + 0.1;
+    imprime(d6{0});
+    imprime(somavet(i6 * 2));
+    imprime(somavet(i6 * 0.5));
+    respost 0;
+]

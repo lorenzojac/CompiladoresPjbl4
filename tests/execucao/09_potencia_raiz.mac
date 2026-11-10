@@ -1,0 +1,20 @@
+inteira principal() @ [
+    inteira i;
+    flut f;
+    duplocarpado d;
+
+    imprime(2 ^ 0);
+    imprime(3 ^ 4);
+    imprime((0 - 2) ^ 3);
+    imprime(2 ^ 31);
+    f receba 1.5;
+    imprime(f ^ 2);
+    imprime(2 ^ 0.5);
+    imprime(raiz(16));
+    imprime(raiz(2.25));
+    d receba 2;
+    imprime(raiz(d));
+    imprime(d ^ 10);
+    imprime(raiz(i));
+    respost 0;
+]

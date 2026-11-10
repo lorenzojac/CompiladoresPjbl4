@@ -1,0 +1,16 @@
+inteira principal() @ [
+    inteira n;
+
+    n receba 4;
+
+    durante (n > 0) edai [
+        cond (n == 2) edai [
+            n receba n - 1;
+        ]
+        casocontrario edai [
+            n receba n - 1;
+        ]
+    ]
+
+    respost n;
+]

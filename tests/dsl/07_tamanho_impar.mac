@@ -1,0 +1,24 @@
+flut vet{11} a, b, c;
+inteira vet{13} ia, ib;
+
+inteira principal() @ [
+    inteira i;
+
+    repete (i receba 0, i < 11, i receba i + 1) edai [
+        a{i} receba i;
+        b{i} receba 2 * i;
+    ]
+    repete (i receba 0, i < 13, i receba i + 1) edai [
+        ia{i} receba i * i - 50;
+    ]
+    c receba a + b;
+    imprime(c{10});
+    imprime(somavet(c));
+    ib receba 2 * ia + 1;
+    imprime(ib{12});
+    imprime(somavet(ia));
+    imprime(maxvet(ia));
+    imprime(minvet(ib));
+    imprime(prodesc(ia, ib));
+    respost 0;
+]

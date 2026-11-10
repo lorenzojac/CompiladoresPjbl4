@@ -1,0 +1,27 @@
+inteira vet{32} a, b;
+duplocarpado vet{32} x, y;
+
+inteira principal() @ [
+    inteira i, manual;
+    duplocarpado manuald;
+
+    repete (i receba 0, i < 32, i receba i + 1) edai [
+        a{i} receba i - 10;
+        b{i} receba 2 * i + 1;
+        x{i} receba i / 8;
+        y{i} receba raiz(i);
+    ]
+    manual receba 0;
+    manuald receba 0;
+    repete (i receba 0, i < 32, i receba i + 1) edai [
+        manual receba manual + a{i} * b{i};
+        manuald receba manuald + x{i} * y{i};
+    ]
+    imprime(prodesc(a, b));
+    imprime(manual);
+    imprime(prodesc(x, y));
+    imprime(manuald);
+    imprime(prodesc(a, x));
+    imprime(prodesc(a + b, a - b));
+    respost 0;
+]

@@ -1,0 +1,17 @@
+inteira principal() @ [
+    inteira m, z;
+
+    m receba 0 - 2147483647 - 1;
+    imprime(m);
+    imprime(m - 1);
+    imprime(m // (0 - 1));
+    imprime(m * (0 - 1));
+    imprime(2147483647 * 2);
+    z receba 0;
+    imprime(z // 7);
+    imprime(-7 // 2);
+    imprime(raiz(0));
+    imprime(1.0 / 3.0 * 3.0);
+    imprime(0.1 + 0.2 == 0.3);
+    respost 0;
+]

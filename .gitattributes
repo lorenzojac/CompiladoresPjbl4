@@ -1,0 +1,7 @@
+# Saidas esperadas e fontes sempre com LF: os testes comparam byte a byte e
+# devem passar igual em Linux, macOS e Windows.
+* text=auto eol=lf
+*.png binary
+*.docx binary
+*.pdf binary
+*.hex -text

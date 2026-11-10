@@ -1,0 +1,42 @@
+inteira vet{16} a, b, soma, dif, prod, manual;
+
+outrafuncao bool iguais(inteira op) @ [
+    inteira i;
+    bool ok;
+
+    ok receba VER;
+    repete (i receba 0, i < 16, i receba i + 1) edai [
+        cond (op == 0) edai [
+            manual{i} receba a{i} + b{i};
+            ok receba ok E (manual{i} == soma{i});
+        ]
+        casocontrario cond (op == 1) edai [
+            manual{i} receba a{i} - b{i};
+            ok receba ok E (manual{i} == dif{i});
+        ]
+        casocontrario edai [
+            manual{i} receba a{i} * b{i};
+            ok receba ok E (manual{i} == prod{i});
+        ]
+    ]
+    respost ok;
+]
+
+inteira principal() @ [
+    inteira i;
+
+    repete (i receba 0, i < 16, i receba i + 1) edai [
+        a{i} receba i * 3 - 7;
+        b{i} receba 20 - i * i;
+    ]
+    soma receba a + b;
+    dif receba a - b;
+    prod receba a * b;
+    imprime(soma{0});
+    imprime(dif{15});
+    imprime(prod{10});
+    imprime(iguais(0));
+    imprime(iguais(1));
+    imprime(iguais(2));
+    respost 0;
+]

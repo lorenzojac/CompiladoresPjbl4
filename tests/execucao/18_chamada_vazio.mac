@@ -1,0 +1,22 @@
+inteira contador;
+
+outrafuncao vazio incrementa(inteira passo) @ [
+    contador receba contador + passo;
+]
+
+outrafuncao vazio linha(palavra rotulo, inteira valor) @ [
+    imprime(rotulo);
+    imprime(valor);
+]
+
+outrafuncao inteira dobro(inteira n) @ [
+    respost 2 * n;
+]
+
+inteira principal() @ [
+    incrementa(5);
+    incrementa(dobro(3));
+    linha("contador", contador);
+    dobro(100);
+    linha("fim", 0);
+]

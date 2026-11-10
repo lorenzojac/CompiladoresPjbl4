@@ -1,0 +1,7 @@
+# Gerados pela compilacao e pelos testes
+build/
+macaronica
+macaronica.exe
+*.o
+__pycache__/
+*.pyc

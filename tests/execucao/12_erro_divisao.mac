@@ -1,0 +1,9 @@
+outrafuncao inteira divide(inteira a, inteira b) @ [
+    respost a // b;
+]
+
+inteira principal() @ [
+    imprime(divide(10, 3));
+    imprime(divide(1, 0));
+    respost 0;
+]

@@ -1,0 +1,9 @@
+outrafuncao inteira absoluto(inteira x) @ [
+    cond (x < 0) edai [
+        respost 0 - x;
+    ]
+]
+
+inteira principal() @ [
+    respost absoluto(0 - 3);
+]

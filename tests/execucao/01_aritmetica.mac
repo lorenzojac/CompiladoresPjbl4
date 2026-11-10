@@ -1,0 +1,17 @@
+inteira principal() @ [
+    inteira a, b, c;
+
+    a receba 2 + 3 * 4;
+    imprime(a);
+    imprime((2 + 3) * 4);
+    imprime(10 - 4 - 3);
+    imprime(2 ^ 3 ^ 2);
+    imprime(100 // 7 // 2);
+    imprime(-2 ^ 2);
+    b receba 7;
+    c receba b * b - 4 * b + 2;
+    imprime(c);
+    imprime(-b + 10 * -2);
+    imprime(2147483647 + 1);
+    respost 0;
+]

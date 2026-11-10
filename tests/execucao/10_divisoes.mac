@@ -1,0 +1,16 @@
+inteira principal() @ [
+    inteira a, b;
+    flut x;
+
+    a receba 7;
+    b receba 2;
+    imprime(a / b);
+    imprime(a // b);
+    imprime((0 - a) // b);
+    imprime((0 - a) / b);
+    x receba a / b;
+    imprime(x * b);
+    imprime(1 / 3);
+    imprime(10 // 3 * 3 + 10 // 3);
+    respost 0;
+]

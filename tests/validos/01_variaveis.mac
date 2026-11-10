@@ -1,0 +1,16 @@
+inteira principal() @ [
+    inteira a, b;
+    flut media;
+    duplocarpado amplo;
+    bool ativo;
+    palavra nome;
+
+    a receba 10;
+    b receba 4;
+    media receba (a + b) / 2;
+    amplo receba media;
+    ativo receba VER;
+    nome receba "macaronica";
+
+    respost a;
+]

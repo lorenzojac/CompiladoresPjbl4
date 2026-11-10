@@ -1,0 +1,28 @@
+outrafuncao inteira sinal(inteira x) @ [
+    cond (x > 0) edai [
+        respost 1;
+    ]
+    casocontrario cond (x < 0) edai [
+        respost 0 - 1;
+    ]
+    casocontrario edai [
+        respost 0;
+    ]
+]
+
+outrafuncao inteira primeiromultiplo(inteira base, inteira limite) @ [
+    inteira i;
+
+    i receba base;
+    durante (VER) edai [
+        cond (i > limite) edai [
+            respost i;
+        ]
+        i receba i + base;
+    ]
+]
+
+inteira principal() @ [
+    imprime(sinal(0 - 7));
+    imprime(primeiromultiplo(7, 30));
+]

@@ -1,0 +1,33 @@
+inteira vet{20} v;
+flut vet{20} f;
+
+inteira principal() @ [
+    inteira i, soma, maior, menor;
+    flut somaf;
+
+    repete (i receba 0, i < 20, i receba i + 1) edai [
+        v{i} receba (i * 37) // 7 - 3 * i;
+        f{i} receba v{i} / 4;
+    ]
+    soma receba 0;
+    maior receba v{0};
+    menor receba v{0};
+    somaf receba 0;
+    repete (i receba 0, i < 20, i receba i + 1) edai [
+        soma receba soma + v{i};
+        cond (v{i} > maior) edai [ maior receba v{i}; ]
+        cond (v{i} < menor) edai [ menor receba v{i}; ]
+        somaf receba somaf + f{i};
+    ]
+    imprime(somavet(v));
+    imprime(soma);
+    imprime(maxvet(v));
+    imprime(maior);
+    imprime(minvet(v));
+    imprime(menor);
+    imprime(somavet(f));
+    imprime(somaf);
+    imprime(maxvet(f));
+    imprime(somavet(v) == soma);
+    respost 0;
+]

@@ -1,0 +1,18 @@
+outrafuncao vazio mostradobro(inteira x) @ [
+    imprime(x * 2);
+]
+
+outrafuncao inteira incrementa(inteira x) @ [
+    respost x + 1;
+]
+
+inteira principal() @ [
+    inteira n;
+
+    n receba 5;
+    mostradobro(n);
+    mostradobro(n + 1);
+    incrementa(n);
+
+    respost 0;
+]

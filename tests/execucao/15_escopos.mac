@@ -1,0 +1,19 @@
+inteira x;
+
+inteira principal() @ [
+    x receba 1;
+    [
+        inteira x;
+
+        x receba 2;
+        [
+            inteira x;
+
+            x receba 3;
+            imprime(x);
+        ]
+        imprime(x);
+    ]
+    imprime(x);
+    respost x;
+]

@@ -1,0 +1,40 @@
+inteira vet{12} m;
+
+inteira principal() @ [
+    inteira i, j, soma;
+    inteira vet{10} v;
+
+    repete (i receba 0, i < 10, i receba i + 1) edai [
+        v{i} receba i * i;
+    ]
+    soma receba 0;
+    repete (i receba 0, i < 9, i receba i + 2) edai [
+        soma receba soma + v{i + 1};
+    ]
+    imprime(soma);
+    repete (i receba 0, i < 3, i receba i + 1) edai [
+        repete (j receba 0, j < 4, j receba 1 + j) edai [
+            m{i * 4 + j} receba i * 10 + j;
+        ]
+    ]
+    imprime(m{11});
+    imprime(m{4});
+    soma receba 0;
+    repete (i receba 0, 10 > i, i receba i + 1) edai [
+        cond (v{9 - i} > 40) edai [
+            soma receba soma + 1;
+        ]
+    ]
+    imprime(soma);
+    repete (i receba 0, i < 10, i receba i + 1) edai [
+        cond (i == 3) edai [
+            i receba 8;
+        ]
+        imprime(v{i});
+    ]
+    repete (i receba 7, i < 11, i receba i + 1) edai [
+        imprime(v{i});
+    ]
+    imprime("nunca");
+    respost 0;
+]

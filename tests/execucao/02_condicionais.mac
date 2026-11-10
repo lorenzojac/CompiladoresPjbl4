@@ -1,0 +1,42 @@
+outrafuncao palavra classifica(inteira n) @ [
+    cond (n < 0) edai [
+        respost "negativo";
+    ]
+    casocontrario cond (n == 0) edai [
+        respost "zero";
+    ]
+    casocontrario cond (n < 10) edai [
+        respost "pequeno";
+    ]
+    casocontrario edai [
+        respost "grande";
+    ]
+]
+
+inteira principal() @ [
+    inteira x, y;
+
+    imprime(classifica(-5));
+    imprime(classifica(0));
+    imprime(classifica(7));
+    imprime(classifica(42));
+    x receba 15;
+    y receba 4;
+    cond (x > 10) edai [
+        cond (y > 5) edai [
+            imprime("x grande, y grande");
+        ]
+        casocontrario edai [
+            cond ((x // y) == 3) edai [
+                imprime("x grande, y pequeno, razao 3");
+            ]
+        ]
+    ]
+    casocontrario edai [
+        imprime("x pequeno");
+    ]
+    cond (x > 100) edai [
+        imprime("nao deve aparecer");
+    ]
+    respost 0;
+]
