@@ -290,6 +290,8 @@ Uno, o limite é 384 `inteira`.
 | `tests/placa/pico/05_pisca_led_pico.mac` | **E/S física**: o mesmo, no LED embutido (pino 25) |
 | `tests/placa/manual/06_botao_acende.mac` | **E/S física**: acende o pino 13 enquanto um botão no pino 2 (ligado ao GND, pull-up interno) estiver pressionado. Na Pico: botão no GP2, LED externo no GP13. Laço infinito: só no hardware |
 | `tests/placa/pico/manual/06_botao_pico.mac` | **E/S física**: acende o LED (pino 25) enquanto um botão entre o GP15 e o GND (pull-up interno) estiver pressionado. Laço infinito: só no hardware |
+| `tests/placa/pico/manual/07_led_liga.mac` | **E/S física**, para ver a olho nu: LED da placa aceso 3 s, apagado 2 s, 5 piscadas de 1 s, aceso no fim. Visto na placa |
+| `tests/placa/pico/manual/08_led_externo.mac` | **E/S física**: LED externo no GP13 (GP13 → resistor de 220–330 Ω → LED → GND): aceso 3 s, 5 piscadas e depois alternando com o LED da placa |
 | `tests/placa/invalidos/01_memoria_excedida.mac` | rejeitado pela verificação de memória com `--alvo=uno`; aceito na Pico (Seção 6) |
 | `tests/placa/pico/invalidos/01_memoria_excedida_pico.mac` | vetor de 120 000 `inteira` (480 000 bytes): rejeitado com `--alvo=pico` (`SEM_TARGET_MEMORY`), válido no PC |
 

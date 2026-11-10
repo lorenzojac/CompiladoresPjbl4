@@ -1,0 +1,25 @@
+inteira principal() @ [
+    inteira i;
+
+    pinomodo(25, 1);
+
+    imprime("1) LED ligado por 3 segundos");
+    pinoescreve(25, 1);
+    espera(3000);
+    pinoescreve(25, 0);
+
+    imprime("2) LED desligado por 2 segundos");
+    espera(2000);
+
+    imprime("3) LED piscando devagar, 5 vezes");
+    repete (i receba 1, i < 6, i receba i + 1) edai [
+        pinoescreve(25, 1);
+        espera(1000);
+        pinoescreve(25, 0);
+        espera(1000);
+        imprime(i);
+    ]
+
+    imprime("4) fim: o LED fica aceso");
+    respost 0;
+]

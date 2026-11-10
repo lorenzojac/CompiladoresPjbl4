@@ -1,0 +1,36 @@
+inteira principal() @ [
+    inteira i, externo, placa;
+
+    externo receba 13;
+    placa receba 25;
+    pinomodo(externo, 1);
+    pinomodo(placa, 1);
+
+    imprime("1) LED do GP13 ligado por 3 segundos");
+    pinoescreve(externo, 1);
+    espera(3000);
+    pinoescreve(externo, 0);
+
+    imprime("2) LED do GP13 piscando 5 vezes");
+    repete (i receba 1, i < 6, i receba i + 1) edai [
+        pinoescreve(externo, 1);
+        espera(500);
+        pinoescreve(externo, 0);
+        espera(500);
+        imprime(i);
+    ]
+
+    imprime("3) alternando: GP13 e LED da placa");
+    repete (i receba 1, i < 6, i receba i + 1) edai [
+        pinoescreve(externo, 1);
+        pinoescreve(placa, 0);
+        espera(500);
+        pinoescreve(externo, 0);
+        pinoescreve(placa, 1);
+        espera(500);
+    ]
+    pinoescreve(placa, 0);
+
+    imprime("4) fim: GP13 apagado, LED da placa aceso");
+    respost 0;
+]
