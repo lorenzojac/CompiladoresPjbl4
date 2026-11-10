@@ -2,7 +2,7 @@
 
 Este documento registra como o compilador traduz Macaronica para LLVM IR, as
 lacunas do enunciado (Seção 4.3) e as decisões adicionais tomadas pelo grupo.
-As decisões numeradas (D38 a D46) também estão resumidas em
+As decisões numeradas (D38 a D49) também estão resumidas em
 [`decisoes.md`](./decisoes.md).
 
 ## 1. Ferramentas e forma de emissão
@@ -36,11 +36,12 @@ antigos antes de compilar e só escreve depois que a geração termina sem erro.
 | `flut` | `float` | IEEE-754 binário de 32 bits |
 | `duplocarpado` | `double` | IEEE-754 binário de 64 bits (também no Uno, ver D45) |
 | `bool` | `i1` | atravessa a biblioteca como `i32` (0/1), para a ABI ser igual em todo alvo |
-| `palavra` | `ptr` | ponteiro para texto terminado em zero; `null` vale `""` |
+| `palavra` | `ptr` | ponteiro para texto terminado em zero; `null` vale `""`. O tamanho vem do alvo: 8 bytes no PC (x86-64), 4 na Pico (ARM), 2 no Uno (AVR) |
 | `tipo vet{N}` | `[N x T]` | acesso por `getelementptr inbounds [N x T], ptr %v, i32 0, i32 %i` |
 | `registro R` | `%struct.R = type { ... }` | campo por `getelementptr inbounds %struct.R, ptr %p, i32 0, i32 k` |
 
-Nenhum tipo depende do "int do C": o IR é o mesmo para x86-64 e AVR.
+Nenhum tipo depende do "int do C": o IR é o mesmo para x86-64, ARM (Pico 2 W)
+e AVR (Uno).
 
 ## 3. Construções
 
@@ -75,15 +76,20 @@ tem um comentário `; linha N`.
 
 | Regra | Como o compilador cumpre |
 | --- | --- |
-| 1. Sem alvo no IR | nenhum `target triple`/`datalayout`; o alvo vem de `clang`/`llc -mtriple=avr` |
+| 1. Sem alvo no IR | nenhum `target triple`/`datalayout`; o alvo vem de `clang` (PC), `llc -mtriple=thumbv8m.main-none-eabi` (Pico 2 W) ou `llc -mtriple=avr` (Uno) |
 | 2. Largura fixa | tabela da Seção 2 |
 | 3. Sem variádicas | o IR só chama funções `zl_*` de assinatura fixa e intrínsecos `llvm.*` |
 | 4. `getelementptr` | todo endereço de elemento/campo usa GEP com índices `i32` |
 | 5. `nounwind` | todas as funções definidas e declaradas; núcleos MLIR via `llvm.passthrough = ["nounwind"]` |
-| 6. Ponto de entrada | `@zl_principal`; `main()` está em `zl_runtime_posix.c` e em `zl_runtime_uno.c` |
+| 6. Ponto de entrada | `@zl_principal`; `main()` está em `zl_runtime_posix.c`, `zl_runtime_pico.c` e `zl_runtime_uno.c` |
 
-Evidência: o mesmo `.ll` roda no PC (clang, lli) e no Arduino Uno
-(`llc -mtriple=avr -mcpu=atmega328p`) com saída idêntica (`make test`).
+Evidência: o mesmo `.ll` roda no PC (clang, lli) e no Arduino Uno emulado
+(`llc -mtriple=avr -mcpu=atmega328p`) com saída idêntica (`make test`), e é
+compilado sem mudança para a Raspberry Pi Pico 2 W, um ARM de 32 bits
+(`llc -mtriple=thumbv8m.main-none-eabi -mcpu=cortex-m33`, D48). Saída na
+placa real (`make test-pico`, 10/11/2026): 30 execuções com saída
+idêntica à do PC (5 programas da placa em C0 e em C2, 1 só da Pico e os
+19 de `tests/execucao`).
 
 Funções do programa têm ligação `internal`; uma função com nome de função da
 libc (`sqrt`, `abs`, `exit`...) ganha o sufixo `.mac` no IR, para o otimizador
@@ -97,16 +103,54 @@ nunca aplicar a ela a semântica da função da biblioteca.
   inteira, igualdade de textos e montagem da mensagem de erro, **iguais em
   todos os alvos** (sem `printf`);
 - `zl_runtime_posix.c`: PC (Linux, macOS e Windows), saída com `putchar`;
-- `zl_runtime_uno.c`: Arduino Uno (PjBL 4, ver [`placa.md`](./placa.md)).
+- `zl_runtime_pico.c`: Raspberry Pi Pico 2 W, a placa principal (PjBL 4,
+  D48 e D49, ver [`placa.md`](./placa.md)), sobre o Pico SDK;
+- `zl_runtime_uno.c`: Arduino Uno, alvo secundário (PjBL 4).
 
-Os dois arquivos de plataforma fazem `#include "zl_runtime_comum.c"`. Assim
+Cada plataforma implementa os ganchos de `runtime/zl_plataforma.h` (escrever
+e ler caracteres, guardar um texto lido, terminar com erro e, desde a D48,
+`zl_pino_valido`, que saiu da parte comum porque cada placa tem os seus
+pinos).
+
+Os três arquivos de plataforma fazem `#include "zl_runtime_comum.c"`. Assim
 cada alvo tem **um único arquivo** de biblioteca, e o comando do enunciado
-funciona como está:
+funciona como está. Comandos por alvo (`scripts/construir.sh` faz o mesmo,
+depois do pipeline MLIR quando o programa usa a DSL):
 
 ```sh
+# PC
 clang saida.ll runtime/zl_runtime_posix.c -o prog        # Linux: acrescentar -lm
 lli --extra-module=build/zl_runtime_posix.bc saida.ll     # make runtime gera o .bc
+
+# Raspberry Pi Pico 2 W (D48): objeto ARM + Pico SDK (CMake) -> .uf2
+mkdir -p build/pico
+llc -mtriple=thumbv8m.main-none-eabi -mcpu=cortex-m33 -float-abi=soft -O2 \
+    -function-sections -data-sections -filetype=obj saida.ll -o build/pico/programa.o
+cmake -S runtime/pico -B build/pico -G Ninja -DPICO_SDK_PATH=<pasta do pico-sdk> \
+      -DZL_PROGRAMA_OBJ=build/pico/programa.o            # so na primeira vez
+cmake --build build/pico      # + zl_runtime_pico.c -> programa.elf e programa.uf2
+
+# Arduino Uno (D45)
+llc -mtriple=avr -mcpu=atmega328p -O2 -filetype=obj saida.ll -o programa.o
+avr-gcc -mmcu=atmega328p -DF_CPU=16000000UL -mdouble=64 -Os programa.o \
+    runtime/zl_runtime_uno.c -lm -Wl,--gc-sections -o programa.elf
+avr-objcopy -O ihex -R .eeprom programa.elf programa.hex
 ```
+
+Na Pico, o `llc` gera só o objeto do programa; a biblioteca e o SDK são
+compilados pelo `arm-none-eabi-gcc` com `-mfloat-abi=softfp`. Por isso o
+`llc` usa `-float-abi=soft` com a FPU ligada pelo `-mcpu`: `float` e
+`double` passam nos mesmos registradores dos dois lados (D48).
+
+| | PC | Pico 2 W | Uno |
+| --- | --- | --- | --- |
+| Compilador da biblioteca | clang | `arm-none-eabi-gcc` (Pico SDK) | `avr-gcc` |
+| `imprime` / `le` | stdout / stdin | USB da placa (CDC); `\n` sai como `\r\n` (D49) | USART0 a 9600 baud |
+| Início | imediato | espera um terminal abrir a porta; sem PC, roda após 3 s (D49) | ao ligar ou ao abrir o monitor (reinício) |
+| Fim normal | código de saída = `respost` (§6.3) | LED aceso fixo | LED aceso fixo |
+| Erro de execução | mensagem + código de saída 3 | mensagem + LED (pino 25) piscando rápido | mensagem + LED (pino 13) piscando rápido |
+| `le` de `palavra` | `malloc` | `malloc` | 4 buffers rotativos de 32 bytes |
+| Pinos | simulados, numeração da Pico | GP0–GP22, GP26–GP28, 25 = LED | 2–19 |
 
 **Nomes.** O enunciado cita `zl_imprime_int` e `zl_le_int` só como exemplos.
 Aqui os nomes seguem os tipos da linguagem: `zl_imprime_inteira`,
@@ -127,7 +171,8 @@ Códigos de erro de execução (`zl_erro_execucao(codigo, linha)`):
 | 7 | pino ou modo inválido |
 
 A mensagem é `Erro de execucao (linha L): <motivo>`. No PC o processo termina
-com código 3; na placa, o LED do pino 13 pisca.
+com código 3; na Pico 2 W o LED da placa (pino 25) pisca rápido; no Uno, o
+LED do pino 13.
 
 ## 6. Lacunas da Seção 4.3 e decisões
 
@@ -173,7 +218,8 @@ processo no PC:
 | `flut` / `duplocarpado` | valor truncado (`fptosi`) |
 | `palavra` / `vazio`, ou fim sem `respost` | 0 (como o `return 0` implícito do C99, D34) |
 
-Na placa não há processo: o valor é ignorado e o LED fica aceso.
+Nas placas (Pico 2 W e Uno) não há processo: o valor é ignorado e o LED fica
+aceso.
 
 Parâmetros de `principal` (permitidos pela gramática desde o PjBL 1) são
 **lidos da entrada** no início do programa, na ordem, como se fossem `le`
@@ -270,7 +316,7 @@ Cada `imprime` termina a linha. A formatação é feita pela biblioteca sem
 mesmos dígitos. Valores fora da faixa da forma fixa usam notação científica
 (`1.2345e+20`); `nan`/`inf` só aparecem por estouro.
 
-### 6.6 Largura dos tipos no processador de 8 bits; `duplocarpado` no Uno (D45)
+### 6.6 Largura dos tipos nas placas: AVR de 8 bits (D45) e ARM de 32 bits (D48)
 
 - `inteira` é sempre `i32`, também no AVR. O `llc` divide as operações em
   registradores de 8 bits e chama as rotinas da libgcc (`__mulsi3`,
@@ -282,6 +328,11 @@ mesmos dígitos. Valores fora da faixa da forma fixa usam notação científica
   Em vez de rejeitar o tipo ou rebaixá-lo para `float`, o mesmo IR roda com
   o mesmo resultado (`tests/placa/02_recursao.mac` e
   `tests/placa/04_dsl_e_duplo.mac`). O custo é cerca de 1,5 KB de flash.
+- Na **Pico 2 W** (Cortex-M33, D48), `inteira` tem o tamanho do registrador e
+  `flut` usa a FPU de precisão simples. `duplocarpado` já é `double` de 64
+  bits pela ABI do ARM; como a FPU não tem precisão dupla, as operações viram
+  chamadas `__aeabi_d*`, atendidas pelo SDK com o coprocessador de precisão
+  dupla (DCP) da RP2350. O IR é o mesmo dos outros alvos.
 
 ## 7. Lacunas adicionais identificadas pelo grupo
 
@@ -296,6 +347,8 @@ mesmos dígitos. Valores fora da faixa da forma fixa usam notação científica
 | D42 | Ordem de avaliação | da esquerda para a direita; em atribuição, o índice do destino é avaliado antes do valor |
 | D46 | `tipo vet{N} a, b;` | segue a especificação oficial ("`tipo vet{tamanho} nome, ...`"): todos os nomes são vetores de N |
 | D47 | Verificação de índice em todo acesso de laço | análise de faixa em `repete` com limites constantes; verificação omitida quando o índice cabe em `[0, N)` (§6.4) |
+| D48 | A placa do grupo é a Raspberry Pi Pico 2 W (ARM Cortex-M33 de 32 bits), não o Uno | mesmo IR com `llc -mtriple=thumbv8m.main-none-eabi -mcpu=cortex-m33 -float-abi=soft` (softfp, a ABI do Pico SDK) e ligação pelo Pico SDK 2.3.1 (CMake); `--alvo=pico` verifica globais + textos + quadro ≤ 524 288 − 65 536 bytes, com `palavra` de 4 bytes; pinos GP0–GP22, GP26–GP28 e 25 = LED, simulados no PC; o Uno fica como alvo secundário (QEMU) |
+| D49 | Sem conversor USB-serial, o que o programa imprime antes de o terminal abrir a porta se perderia | o programa espera o terminal (DTR) com o LED piscando devagar; sem PC, roda após 3 s; fechar o terminal reinicia a placa; 1200 baud reinicia em BOOTSEL para gravar |
 | — | Nome de função igual ao de função da libc | sufixo `.mac` no IR (Seção 4) |
 | — | Vetores locais grandes | ficam na pilha (`alloca`); vetores grandes devem ser globais (no PC a pilha padrão do Windows é 1 MB) |
 
