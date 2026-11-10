@@ -5,3 +5,4 @@ macaronica.exe
 *.o
 __pycache__/
 *.pyc
+.vscode/

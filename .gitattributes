@@ -5,3 +5,5 @@
 *.docx binary
 *.pdf binary
 *.hex -text
+*.uf2 binary
+*.elf binary

@@ -116,6 +116,12 @@ void zl_plataforma_termina_com_erro(int32_t codigo)
     }
 }
 
+int zl_pino_valido(int32_t pino)
+{
+    /* 0 e 1 sao RX/TX da serial usada por imprime(). */
+    return pino >= 2 && pino <= 19;
+}
+
 /*
  * Numeracao Arduino -> registradores do ATmega328P:
  *   2-7 -> PORTD2..7, 8-13 -> PORTB0..5, 14-19 (A0-A5) -> PORTC0..5.

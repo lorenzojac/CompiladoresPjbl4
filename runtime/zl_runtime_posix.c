@@ -83,8 +83,18 @@ void zl_plataforma_termina_com_erro(int32_t codigo)
     exit(ZL_SAIDA_ERRO_EXECUCAO);
 }
 
-/* Nivel simulado dos pinos 0-19. */
-static int32_t niveis[20];
+/*
+ * O PC simula os pinos da placa principal, a Raspberry Pi Pico 2 W:
+ * GP0-GP22 e GP26-GP28; 25 e o LED embutido. GP23, GP24 e GP29 sao
+ * ligados ao chip sem fio da placa e nao podem ser usados (D48).
+ */
+int zl_pino_valido(int32_t pino)
+{
+    return (pino >= 0 && pino <= 22) || (pino >= 25 && pino <= 28);
+}
+
+/* Nivel simulado dos pinos 0-28. */
+static int32_t niveis[29];
 
 static void escreve_numero(int32_t valor)
 {

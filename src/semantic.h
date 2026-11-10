@@ -81,7 +81,8 @@ typedef enum {
 /* Alvo de compilacao (--alvo). Afeta apenas verificacoes, nunca o IR. */
 typedef enum {
     SEMANTIC_TARGET_PC,
-    SEMANTIC_TARGET_UNO
+    SEMANTIC_TARGET_UNO,
+    SEMANTIC_TARGET_PICO
 } SemanticTarget;
 
 typedef struct {
@@ -141,5 +142,21 @@ void semantic_result_destroy(SemanticResult *result);
 /* RAM do Arduino Uno e reserva para pilha de chamadas e biblioteca (D45). */
 #define SEMANTIC_UNO_RAM_BYTES ((size_t)2048)
 #define SEMANTIC_UNO_RESERVED_BYTES ((size_t)512)
+
+/*
+ * Raspberry Pi Pico 2 W (RP2350): 512 KB de SRAM principal; 64 KB ficam
+ * para o Pico SDK, a pilha USB, o driver do chip sem fio e o heap (D48).
+ */
+#define SEMANTIC_PICO_RAM_BYTES ((size_t)524288)
+#define SEMANTIC_PICO_RESERVED_BYTES ((size_t)65536)
+
+/* RAM e reserva do alvo; ram_bytes == 0 no PC (sem verificacao). */
+typedef struct {
+    const char *name;
+    size_t ram_bytes;
+    size_t reserved_bytes;
+} SemanticTargetInfo;
+
+SemanticTargetInfo semantic_target_info(SemanticTarget target);
 
 #endif

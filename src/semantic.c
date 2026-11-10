@@ -129,12 +129,18 @@ static const char *const MESSAGE_LITERAL_RANGE =
     "literal fora do intervalo do tipo (inteira e i32)";
 static const char *const MESSAGE_READ_SCALAR =
     "le exige variavel escalar ou elemento de vetor";
-static const char *const MESSAGE_TARGET_GLOBALS =
+static const char *const MESSAGE_TARGET_GLOBALS_UNO =
     "variaveis globais e textos excedem a RAM do alvo uno "
     "(2048 bytes, 512 reservados para pilha e biblioteca)";
-static const char *const MESSAGE_TARGET_FRAME =
+static const char *const MESSAGE_TARGET_FRAME_UNO =
     "variaveis locais desta funcao somadas as globais excedem a RAM do "
     "alvo uno (2048 bytes, 512 reservados para pilha e biblioteca)";
+static const char *const MESSAGE_TARGET_GLOBALS_PICO =
+    "variaveis globais e textos excedem a RAM do alvo pico "
+    "(524288 bytes, 65536 reservados para SDK, USB e pilha)";
+static const char *const MESSAGE_TARGET_FRAME_PICO =
+    "variaveis locais desta funcao somadas as globais excedem a RAM do "
+    "alvo pico (524288 bytes, 65536 reservados para SDK, USB e pilha)";
 
 typedef enum {
     VECTOR_SIZE_VALID,
@@ -596,14 +602,23 @@ static void annotate_declarator(
     ((AstDeclarator *)declarator)->vector_size = vector_size;
 }
 
-/* Tamanho em bytes no Arduino Uno (AVR: sem alinhamento, ptr de 16 bits). */
-static size_t target_scalar_size(AstTypeKind kind)
+/*
+ * Tamanho em bytes no alvo, sem alinhamento: ponteiro (palavra) de 16 bits
+ * no Uno (AVR) e de 32 bits na Pico (ARM). Estimativa para a verificacao
+ * de memoria (D45, D48).
+ */
+static size_t target_pointer_bytes(SemanticTarget target)
+{
+    return target == SEMANTIC_TARGET_UNO ? 2 : 4;
+}
+
+static size_t target_scalar_size(AstTypeKind kind, size_t pointer_bytes)
 {
     switch (kind) {
     case AST_TYPE_BOOL:
         return 1;
     case AST_TYPE_PALAVRA:
-        return 2;
+        return pointer_bytes;
     case AST_TYPE_DUPLOCARPADO:
         return 8;
     case AST_TYPE_INTEIRA:
@@ -627,7 +642,8 @@ static size_t saturating_mul(size_t a, size_t b)
 static size_t target_value_size(
     AstTypeKind kind,
     const AstRecordDecl *record,
-    size_t vector_size
+    size_t vector_size,
+    size_t pointer_bytes
 )
 {
     size_t element = 0;
@@ -639,13 +655,16 @@ static size_t target_value_size(
                 if (record->fields[i] != NULL) {
                     element = saturating_add(
                         element,
-                        target_scalar_size(record->fields[i]->type.kind)
+                        target_scalar_size(
+                            record->fields[i]->type.kind,
+                            pointer_bytes
+                        )
                     );
                 }
             }
         }
     } else {
-        element = target_scalar_size(kind);
+        element = target_scalar_size(kind, pointer_bytes);
     }
     return vector_size > 0 ? saturating_mul(element, vector_size) : element;
 }
@@ -790,7 +809,12 @@ static bool declare_declarators(
         );
         *bytes = saturating_add(
             *bytes,
-            target_value_size(declaration->type.kind, record, vector_size)
+            target_value_size(
+                declaration->type.kind,
+                record,
+                vector_size,
+                target_pointer_bytes(analyzer->target)
+            )
         );
     }
     return true;
@@ -3010,9 +3034,15 @@ static void declare_builtins(SemanticAnalyzer *analyzer)
 }
 
 /* Soma dos tamanhos (no alvo) de todas as declaracoes de um bloco. */
-static size_t block_frame_bytes(const AstBlock *block);
+static size_t block_frame_bytes(
+    const AstBlock *block,
+    size_t pointer_bytes
+);
 
-static size_t statement_frame_bytes(const AstStatement *statement)
+static size_t statement_frame_bytes(
+    const AstStatement *statement,
+    size_t pointer_bytes
+)
 {
     size_t total = 0;
     size_t i;
@@ -3030,38 +3060,55 @@ static size_t statement_frame_bytes(const AstStatement *statement)
                 target_value_size(
                     declaration->type.kind,
                     declaration->record,
-                    declaration->declarators[i]->vector_size
+                    declaration->declarators[i]->vector_size,
+                    pointer_bytes
                 )
             );
         }
         return total;
     }
     case AST_STMT_BLOCK:
-        return block_frame_bytes(statement->as.block);
+        return block_frame_bytes(statement->as.block, pointer_bytes);
     case AST_STMT_IF:
-        total = block_frame_bytes(statement->as.if_statement->then_block);
+        total = block_frame_bytes(
+            statement->as.if_statement->then_block,
+            pointer_bytes
+        );
         for (i = 0; i < statement->as.if_statement->else_if_count; i++) {
             total = saturating_add(
                 total,
                 block_frame_bytes(
-                    statement->as.if_statement->else_if_branches[i]->block
+                    statement->as.if_statement->else_if_branches[i]->block,
+                    pointer_bytes
                 )
             );
         }
         return saturating_add(
             total,
-            block_frame_bytes(statement->as.if_statement->else_block)
+            block_frame_bytes(
+                statement->as.if_statement->else_block,
+                pointer_bytes
+            )
         );
     case AST_STMT_WHILE:
-        return block_frame_bytes(statement->as.while_statement->body);
+        return block_frame_bytes(
+            statement->as.while_statement->body,
+            pointer_bytes
+        );
     case AST_STMT_REPEAT:
-        return block_frame_bytes(statement->as.repeat_statement->body);
+        return block_frame_bytes(
+            statement->as.repeat_statement->body,
+            pointer_bytes
+        );
     default:
         return 0;
     }
 }
 
-static size_t block_frame_bytes(const AstBlock *block)
+static size_t block_frame_bytes(
+    const AstBlock *block,
+    size_t pointer_bytes
+)
 {
     size_t total = 0;
     size_t i;
@@ -3072,7 +3119,7 @@ static size_t block_frame_bytes(const AstBlock *block)
     for (i = 0; i < block->statement_count; i++) {
         total = saturating_add(
             total,
-            statement_frame_bytes(block->statements[i])
+            statement_frame_bytes(block->statements[i], pointer_bytes)
         );
     }
     return total;
@@ -3083,11 +3130,16 @@ static size_t block_frame_bytes(const AstBlock *block)
  * as variaveis locais de uma funcao no bloco de entrada (alloca), entao o
  * quadro de uma funcao e a soma de TODAS as suas declaracoes, inclusive as
  * de blocos internos, mais os parametros. Globais e textos ficam na RAM
- * durante todo o programa. No Uno: globais + quadro <= 2048 - 512.
+ * durante todo o programa. No Uno: globais + quadro <= 2048 - 512; na
+ * Pico 2 W: globais + quadro <= 524288 - 65536 (D48).
  */
 static void check_target_memory(SemanticAnalyzer *analyzer)
 {
-    const size_t limit = SEMANTIC_UNO_RAM_BYTES - SEMANTIC_UNO_RESERVED_BYTES;
+    const SemanticTargetInfo info = semantic_target_info(analyzer->target);
+    const size_t limit = info.ram_bytes - info.reserved_bytes;
+    const size_t pointer_bytes = target_pointer_bytes(analyzer->target);
+    const bool checked = info.ram_bytes > 0;
+    const bool pico = analyzer->target == SEMANTIC_TARGET_PICO;
     size_t i;
 
     for (i = 0; i < analyzer->program->count; i++) {
@@ -3100,17 +3152,20 @@ static void check_target_memory(SemanticAnalyzer *analyzer)
             continue;
         }
         function = item->as.function;
-        frame = block_frame_bytes(function->body);
+        frame = block_frame_bytes(function->body, pointer_bytes);
         for (p = 0; p < function->parameter_count; p++) {
             frame = saturating_add(
                 frame,
-                target_scalar_size(function->parameters[p]->type.kind)
+                target_scalar_size(
+                    function->parameters[p]->type.kind,
+                    pointer_bytes
+                )
             );
         }
         if (frame > analyzer->max_frame_bytes) {
             analyzer->max_frame_bytes = frame;
         }
-        if (analyzer->target == SEMANTIC_TARGET_UNO &&
+        if (checked &&
             analyzer->global_bytes <= limit &&
             saturating_add(analyzer->global_bytes, frame) > limit) {
             add_diagnostic(
@@ -3118,12 +3173,11 @@ static void check_target_memory(SemanticAnalyzer *analyzer)
                 SEM_TARGET_MEMORY,
                 function->location,
                 function->is_main ? "principal" : function->name,
-                MESSAGE_TARGET_FRAME
+                pico ? MESSAGE_TARGET_FRAME_PICO : MESSAGE_TARGET_FRAME_UNO
             );
         }
     }
-    if (analyzer->target == SEMANTIC_TARGET_UNO &&
-        analyzer->global_bytes > limit) {
+    if (checked && analyzer->global_bytes > limit) {
         SourceLocation start = {1, 1};
 
         add_diagnostic(
@@ -3131,9 +3185,25 @@ static void check_target_memory(SemanticAnalyzer *analyzer)
             SEM_TARGET_MEMORY,
             start,
             NULL,
-            MESSAGE_TARGET_GLOBALS
+            pico ? MESSAGE_TARGET_GLOBALS_PICO : MESSAGE_TARGET_GLOBALS_UNO
         );
     }
+}
+
+SemanticTargetInfo semantic_target_info(SemanticTarget target)
+{
+    SemanticTargetInfo info = {"pc", 0, 0};
+
+    if (target == SEMANTIC_TARGET_UNO) {
+        info.name = "uno";
+        info.ram_bytes = SEMANTIC_UNO_RAM_BYTES;
+        info.reserved_bytes = SEMANTIC_UNO_RESERVED_BYTES;
+    } else if (target == SEMANTIC_TARGET_PICO) {
+        info.name = "pico";
+        info.ram_bytes = SEMANTIC_PICO_RAM_BYTES;
+        info.reserved_bytes = SEMANTIC_PICO_RESERVED_BYTES;
+    }
+    return info;
 }
 
 void semantic_set_target(SemanticAnalyzer *analyzer, SemanticTarget target)

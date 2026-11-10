@@ -28,7 +28,11 @@ void zl_plataforma_termina_com_erro(int32_t codigo)
 #endif
     ;
 
-/* Valida pino e modo na numeracao Arduino; usado pelas duas plataformas. */
+/*
+ * 1 se o pino existe e pode ser usado pelo programa, na numeracao da
+ * propria placa: GP0-GP22, GP26-GP28 e 25 = LED na Pico 2 W (tambem
+ * simulada no PC); 2-19 no Arduino Uno (D44, D48).
+ */
 int zl_pino_valido(int32_t pino);
 
 #endif

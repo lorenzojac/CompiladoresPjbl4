@@ -4,7 +4,7 @@
  *   macaronica entrada.mac                    valida e imprime o relatorio
  *   macaronica entrada.mac -o saida.ll        gera LLVM IR (e saida.mlir se
  *                                             houver DSL vetorial)
- *   opcoes: --alvo=pc|uno  --mlir=arquivo  -q (silencioso se valido)
+ *   opcoes: --alvo=pc|pico|uno  --mlir=arquivo  -q (silencioso se valido)
  *
  * Le o arquivo inteiro para a memoria, executa parser (que conduz o
  * lexer), analise semantica e, com -o, o gerador de codigo. Um programa
@@ -451,11 +451,12 @@ static void print_usage(void)
 {
     fputs(
         "Uso: macaronica <entrada.mac> [-o saida.ll] [--mlir=nucleos.mlir]\n"
-        "                [--alvo=pc|uno] [-q]\n"
-        "  sem -o     apenas valida e imprime o relatorio das fases\n"
-        "  -o         gera LLVM IR; com DSL vetorial gera tambem os nucleos\n"
-        "             MLIR (padrao: mesmo nome com extensao .mlir)\n"
-        "  --alvo=uno verificacoes do Arduino Uno (RAM de 2 KB)\n"
+        "                [--alvo=pc|pico|uno] [-q]\n"
+        "  sem -o      apenas valida e imprime o relatorio das fases\n"
+        "  -o          gera LLVM IR; com DSL vetorial gera tambem os nucleos\n"
+        "              MLIR (padrao: mesmo nome com extensao .mlir)\n"
+        "  --alvo=pico verificacoes da Raspberry Pi Pico 2 W (RAM de 512 KB)\n"
+        "  --alvo=uno  verificacoes do Arduino Uno (RAM de 2 KB)\n"
         "  -q         nao imprime o relatorio quando o programa e valido\n"
         "  --fastmath nucleos da DSL podem reassociar operacoes reais\n",
         stderr
@@ -479,6 +480,8 @@ static bool parse_options(int argc, char **argv, Options *options)
             options->target = SEMANTIC_TARGET_PC;
         } else if (strcmp(arg, "--alvo=uno") == 0) {
             options->target = SEMANTIC_TARGET_UNO;
+        } else if (strcmp(arg, "--alvo=pico") == 0) {
+            options->target = SEMANTIC_TARGET_PICO;
         } else if (strcmp(arg, "-q") == 0) {
             options->quiet = true;
         } else if (strcmp(arg, "--fastmath") == 0) {
@@ -524,17 +527,23 @@ static bool write_text_file(const char *path, const StrBuf *text)
     return ok;
 }
 
-static void print_target_memory(const SemanticResult *result)
+static void print_target_memory(
+    SemanticTarget target,
+    const SemanticResult *result
+)
 {
+    const SemanticTargetInfo info = semantic_target_info(target);
+
     printf(
-        "[ALVO UNO]\n"
+        "[ALVO %s]\n"
         "Memoria estimada: globais e textos %zu bytes; maior quadro de "
         "funcao %zu bytes; limite %zu bytes (%zu de RAM - %zu reservados)\n",
+        target == SEMANTIC_TARGET_PICO ? "PICO 2 W" : "UNO",
         result->global_bytes,
         result->max_frame_bytes,
-        SEMANTIC_UNO_RAM_BYTES - SEMANTIC_UNO_RESERVED_BYTES,
-        SEMANTIC_UNO_RAM_BYTES,
-        SEMANTIC_UNO_RESERVED_BYTES
+        info.ram_bytes - info.reserved_bytes,
+        info.ram_bytes,
+        info.reserved_bytes
     );
 }
 
@@ -627,9 +636,9 @@ int main(int argc, char **argv)
 
     if (!(program_valid && options.quiet)) {
         print_semantic_report(&semantic_result);
-        if (options.target == SEMANTIC_TARGET_UNO &&
+        if (options.target != SEMANTIC_TARGET_PC &&
             semantic_result.status != SEMANTIC_INTERNAL_FAILURE) {
-            print_target_memory(&semantic_result);
+            print_target_memory(options.target, &semantic_result);
         }
     }
 

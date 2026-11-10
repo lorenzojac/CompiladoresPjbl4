@@ -364,9 +364,3 @@ void zl_erro_execucao(int32_t codigo, int32_t linha)
     escreve_fixo(FIXO("\n"));
     zl_plataforma_termina_com_erro(codigo);
 }
-
-int zl_pino_valido(int32_t pino)
-{
-    /* 0 e 1 sao RX/TX da serial usada por imprime(). */
-    return pino >= 2 && pino <= 19;
-}
