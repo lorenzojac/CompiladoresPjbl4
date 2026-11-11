@@ -78,6 +78,22 @@ echo "21 5.5" | sh scripts/jit.sh tests/execucao/17_principal_parametros.mac
 `tests/execucao` (C0) e os 7 da DSL em C2 e C3, com a mesma saída de `lli` e
 `clang`.
 
+**Queda intermitente do `mlir-runner` no Windows.** O `mlir-runner` 23.1.5
+do MSYS2 cai às vezes (`Exception Code: 0xC0000005`) **antes de executar o
+programa**, ao verificar o módulo: o verificador do MLIR roda em várias
+threads (`failableParallelForEach`) e quebra em `StorageUniquer`. Medimos 3
+quedas em 40 execuções do mesmo programa; a falha aparece de forma aleatória
+no `make test`, por isso ele passava em um PC e falhava em outro. O
+`mlir-opt` e o `mlir-translate` evitam o problema com
+`--mlir-disable-threading`, mas o `mlir-runner` não aceita essa opção. Como a
+queda acontece antes de o programa imprimir ou ler qualquer coisa,
+`scripts/jit.sh` repete a execução (até 5 vezes) quando a ferramenta cai sem
+ter impresso nada. Cada repetição fica registrada em
+`<saída>/<programa>.jit.tentativas`, fora da saída comparada pelos testes. O
+erro está na ferramenta, não no IR: o mesmo módulo roda sem falhas no `lli` e
+no `clang`, e passa no `mlir-translate`/`mlir-opt` com a verificação em uma
+thread.
+
 ## 3. O mesmo núcleo em três níveis
 
 Programa [`mlir/exemplo.mac`](./mlir/exemplo.mac), com `N = 1024`:

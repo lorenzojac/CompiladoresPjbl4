@@ -93,5 +93,32 @@ esac
 FIM
 } > "$SAIDA/$NOME.jit.mlir"
 
-exec "$MLIR_RUNNER" "$SAIDA/$NOME.jit.mlir" -e zl_jit_main \
-    --entry-point-result=void --shared-libs="$BIBLIOTECAS"
+# O mlir-runner 23.1.5 do MSYS2 cai as vezes (3 de 40 execucoes, medido) ao
+# verificar o modulo: o verificador do MLIR roda em varias threads e o
+# mlir-runner, ao contrario do mlir-opt, nao aceita --mlir-disable-threading.
+# A queda acontece antes de o programa comecar (nada foi impresso nem lido),
+# entao, se a ferramenta caiu sem imprimir nada, tentamos de novo (ate 5x).
+SAIDA_JIT="$SAIDA/$NOME.jit.saida"
+TENTATIVA=1
+while :; do
+    STATUS=0
+    # Subshell com stderr redirecionado: o aviso "Segmentation fault" que o
+    # shell imprime quando o processo cai vai para o .err, nao para a saida.
+    # O "exit $?" impede o shell de trocar o subshell pelo proprio processo
+    # (senao quem imprime o aviso e o shell de fora).
+    ("$MLIR_RUNNER" "$SAIDA/$NOME.jit.mlir" -e zl_jit_main \
+        --entry-point-result=void --shared-libs="$BIBLIOTECAS" \
+        >"$SAIDA_JIT"
+    exit $?) 2>"$SAIDA_JIT.err" || STATUS=$?
+    if [ "$STATUS" -eq 0 ] || [ -s "$SAIDA_JIT" ] || [ "$TENTATIVA" -ge 5 ] ||
+        ! grep -q "PLEASE submit a bug report" "$SAIDA_JIT.err"; then
+        break
+    fi
+    # Registro fora da saida do programa (os testes comparam stdout+stderr).
+    echo "mlir-runner caiu antes de executar; tentativa $((TENTATIVA + 1))" \
+        >>"$SAIDA/$NOME.jit.tentativas"
+    TENTATIVA=$((TENTATIVA + 1))
+done
+cat "$SAIDA_JIT"
+cat "$SAIDA_JIT.err" >&2
+exit "$STATUS"
