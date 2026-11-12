@@ -548,9 +548,9 @@ static void base_address(const VarInfo *var, char *out, size_t size)
  * Analise de faixa dos indices (D47).
  *
  * Um repete da forma
- *     repete (i receba A; i < B; i receba i + K) [ corpo ]
+ *     repete (i receba A, i < B, i receba i + K) edai [ corpo ]
  * com A, B e K constantes inteiras, K >= 1, i variavel LOCAL inteira (uma
- * chamada nao pode altera-la) e nenhuma atribuicao ou leia(i) no corpo,
+ * chamada nao pode altera-la) e nenhuma atribuicao ou le(i) no corpo,
  * garante que dentro do corpo A <= i <= B - 1. Exige-se tambem que o ultimo
  * incremento nao estoure (B - 1 + K <= 2^31 - 1): com a volta do
  * complemento de dois (D43) i ficaria negativo e o laco continuaria.
