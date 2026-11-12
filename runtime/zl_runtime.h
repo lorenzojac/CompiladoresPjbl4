@@ -5,13 +5,16 @@
  * Biblioteca de execucao da Macaronica: a unica ponte entre o codigo gerado
  * e a plataforma (PjBL 3, Secao 4.5). Todas as funcoes tem assinatura fixa
  * (nada variadico) e tipos de largura fixa; bool atravessa a fronteira como
- * int32_t (0 ou 1) para que a ABI seja a mesma em x86-64 e em AVR.
+ * int32_t (0 ou 1) para que a ABI seja a mesma em x86-64, ARM e AVR.
  *
  * Implementacoes:
  *   zl_runtime_comum.c  formatacao e leitura, iguais em todo alvo (saida do
  *                       PC identica a da placa);
  *   zl_runtime_posix.c  PC (Linux, macOS, Windows): stdio, main();
- *   zl_runtime_uno.c    Arduino Uno: USART a 9600 baud, LED no pino 13.
+ *   zl_runtime_pico.c   Raspberry Pi Pico 2 W (placa principal, D48): USB,
+ *                       LED no pino 25 (chip CYW43439);
+ *   zl_runtime_uno.c    Arduino Uno (2a arquitetura): USART a 9600 baud,
+ *                       LED no pino 13.
  */
 
 #include <stdint.h>
@@ -57,7 +60,11 @@ void zl_erro_execucao(int32_t codigo, int32_t linha)
 #endif
     ;
 
-/* E/S fisica (D44). Pinos: numeracao da placa Arduino (0-13, A0-A5 = 14-19). */
+/*
+ * E/S fisica (D44, D48). Pinos na numeracao da propria placa: Pico 2 W
+ * GP0-GP22 e GP26-GP28, 25 = LED (o PC simula esses); Uno 2-13 e
+ * A0-A5 = 14-19. Cada plataforma valida com zl_pino_valido.
+ */
 #define ZL_PINO_ENTRADA 0
 #define ZL_PINO_SAIDA 1
 #define ZL_PINO_ENTRADA_PULLUP 2
