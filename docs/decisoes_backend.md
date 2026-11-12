@@ -180,7 +180,9 @@ LED do pino 13.
 
 - A promoção implícita só alarga: `inteira → flut → duplocarpado` (D16). Não
   existe conversão implícita para um tipo mais estreito, então `fptrunc` e
-  `fptosi` nunca aparecem em expressões.
+  `fptosi` nunca aparecem em expressões. A única exceção é interna e não
+  muda o tipo visível: `flut ^ real` é calculado em `double` (`llvm.pow.f64`)
+  e volta para `flut` com `fptrunc` (D45, §3).
 - Cada operação é feita no tipo do seu resultado: os operandos são
   convertidos explicitamente (`sitofp`, `fpext`) antes da instrução.
 - **`/` é sempre divisão real.** `inteira / inteira` é `flut`

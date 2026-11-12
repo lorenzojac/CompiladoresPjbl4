@@ -9,7 +9,7 @@
  *
  * Textos fixos da biblioteca (mensagens de erro, VER/FAL, nan...) usam
  * FIXO("..."): no AVR ficam na flash (PROGMEM) e sao lidos com
- * pgm_read_byte, economizando ~200 bytes dos 2 KB de RAM; no PC, FIXO e o
+ * pgm_read_byte, economizando ~240 bytes dos 2 KB de RAM; no PC, FIXO e o
  * proprio texto. E uma otimizacao dependente do alvo feita so na biblioteca:
  * o IR gerado pelo compilador nao muda.
  */

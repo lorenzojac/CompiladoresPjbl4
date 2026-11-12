@@ -4,7 +4,7 @@
  *   macaronica entrada.mac                    valida e imprime o relatorio
  *   macaronica entrada.mac -o saida.ll        gera LLVM IR (e saida.mlir se
  *                                             houver DSL vetorial)
- *   opcoes: --alvo=pc|pico|uno  --mlir=arquivo  -q (silencioso se valido)
+ *   opcoes: --alvo=pc|pico|uno  --mlir=arquivo  -q  --fastmath (bench)
  *
  * Le o arquivo inteiro para a memoria, executa parser (que conduz o
  * lexer), analise semantica e, com -o, o gerador de codigo. Um programa

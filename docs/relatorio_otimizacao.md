@@ -75,7 +75,7 @@ echo "21 5.5" | sh scripts/jit.sh tests/execucao/17_principal_parametros.mac
 ```
 
 `make test-jit` (parte do `make test`) roda pelo JIT os 19 programas de
-`tests/execucao` (C0) e os 7 da DSL em C2 e C3, com a mesma saída de `lli` e
+`tests/execucao` (C0) e os 12 da DSL (7 válidos e 5 rejeitados) em C2 e C3, com a mesma saída de `lli` e
 `clang`.
 
 **Queda intermitente do `mlir-runner` no Windows.** O `mlir-runner` 23.1.5
@@ -350,7 +350,7 @@ intercala o laço.
 ## 7. C3: paralelismo e escalabilidade
 
 - **N = 10⁷, reduções**: escalam até 20 threads: `somavet flut` 7,09 → 0,95 ms
-  (7,5× sobre 1 thread); `somavet inteira`, 5,0×; `prodesc`, 4,4×.
+  (7,5× sobre 1 thread); `somavet inteira`, 5,0×; `prodesc`, 4,3×.
 - **N = 10⁷, soma elemento a elemento**: satura em ~2,3× sobre 1 thread
   (5,998 → 2,958 ms com 4 threads, 2,0×; 2,604 ms com 8, 2,3×; 2,623 ms com
   20). Cada chamada move 120 MB (lê `a` e `b`, escreve `c`); a 2,62 ms isso
@@ -394,6 +394,8 @@ intercala o laço.
    flutuante isso só é legítimo com permissão para reassociar**, porque o
    resultado muda. O LLVM respeita isso; o vetorizador e o paralelizador do
    MLIR, nesta versão, não.
-4. O mesmo `.ll` com núcleos vetorizados roda no Arduino Uno
-   (`tests/placa/04_dsl_e_duplo.mac`), onde o `<8 x float>` é legalizado em
-   operações escalares: correto, mas sem ganho, já que o AVR não tem SIMD.
+4. O mesmo `.ll` com núcleos vetorizados roda na Raspberry Pi Pico 2 W real
+   (`make test-pico`, C2) e no Arduino Uno emulado
+   (`tests/placa/04_dsl_e_duplo.mac`). Nos dois, o `<8 x float>` é
+   legalizado em operações escalares: correto, mas sem ganho, já que nem o
+   Cortex-M33 nem o AVR têm SIMD de `float`.

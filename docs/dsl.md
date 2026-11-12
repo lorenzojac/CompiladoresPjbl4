@@ -118,8 +118,8 @@ por `lli`, `clang` e pelo JIT do MLIR) e `tests/dsl/invalidos/`
 | O destino pode ser um operando (`a receba a + b;`)? | **Pode.** Cada iteração lê `a{i}` e `b{i}` e escreve `a{i}`, sempre no mesmo índice: não há dependência entre iterações, então vetorizar e paralelizar continuam corretos. No núcleo MLIR o destino e o operando são o mesmo parâmetro `memref` (a folha é deduplicada), e não dois ponteiros que poderiam se sobrepor |
 | Redução de vetor vazio ou de tamanho 1 | Vetor vazio não existe (`vet{0}` é `SEM_INVALID_VECTOR_SIZE`, D28). Com N = 1: `somavet` e `maxvet`/`minvet` devolvem o único elemento, e `prodesc` devolve `a{0} * b{0}`. `maxvet`/`minvet` começam do elemento 0 e o laço vai de 1 a N, que com N = 1 não executa nenhuma vez |
 | Paridade (Zolang) | Não se aplica à Macaronica |
-| Maior vetor na placa | Limitado pela RAM: no Uno, globais + textos + o maior quadro de função ≤ 2048 − 512 bytes (D45). Na prática, até ~380 `inteira`/`flut` ou ~190 `duplocarpado` no total. O compilador verifica com `--alvo=uno` |
-| Numeração dos pinos | A da própria placa (`pinomodo(13, 1)` é o LED do Arduino); ver [`placa.md`](./placa.md) |
+| Maior vetor na placa | Limitado pela RAM. Na **Pico 2 W** (placa principal, D48): globais + textos + o maior quadro de função ≤ 524 288 − 65 536 bytes, ou seja, até ~114 688 `inteira`/`flut` (`--alvo=pico`; o programa com 120 000 é rejeitado). No **Uno** (2ª arquitetura): ≤ 2048 − 512 bytes (D45), até ~380 `inteira`/`flut` ou ~190 `duplocarpado` (`--alvo=uno`) |
+| Numeração dos pinos | A da própria placa: na Pico, GP0–GP22 e GP26–GP28, e 25 = LED embutido (`pinomodo(25, 1)`); no Uno, 2–19 (13 = LED). Ver [`placa.md`](./placa.md) |
 | Núcleos vetoriais num alvo sem SIMD | O mesmo `.ll` serve: no AVR o `llc` "legaliza" os tipos `<8 x float>` da configuração C2 em operações escalares, e o resultado é igual. Não há ganho de vetorização no Uno; o ganho vem só no PC |
 
 ## 5. Relação com as decisões do projeto

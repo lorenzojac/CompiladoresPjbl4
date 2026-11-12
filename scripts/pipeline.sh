@@ -45,8 +45,8 @@ C2)
     ;;
 C3)
     # affine-parallelize: troca affine.for sem dependencias entre iteracoes
-    # por affine.parallel; parallel-reductions=true aceita reducoes
-    # (soma, maximo) como reducoes paralelas. max-nested=1: so o laco externo.
+    # por affine.parallel; parallel-reductions=true paraleliza as somas
+    # (somavet, prodesc); maxvet/minvet (cmp+select) nao. max-nested=1: externo.
     "$MLIR_OPT" $OPCOES "$ENTRADA" \
         --affine-parallelize="max-nested=1 parallel-reductions=true" \
         -o "$TMP/1.mlir"
