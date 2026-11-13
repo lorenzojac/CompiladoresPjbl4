@@ -2228,6 +2228,68 @@ static bool test_records_as_types(void)
         "inteira principal() @ [imprime(p); respost 0;]",
         SEM_TYPE_MISMATCH
     ));
+    /* D51: variavel de registro sem a palavra registro (global e local,
+     * escalar e vetor), como nos programas de teste do professor */
+    CHECK(status_of(
+        "registro Cuidador @ [palavra nome; inteira idade;]"
+        "Cuidador chefe;"
+        "inteira principal() @ ["
+        "  Cuidador responsavel;"
+        "  Cuidador vet{3} equipe;"
+        "  responsavel.idade receba 34;"
+        "  equipe{1} receba responsavel;"
+        "  chefe receba equipe{1};"
+        "  respost chefe.idade;"
+        "]",
+        NULL, NULL
+    ) == SEMANTIC_OK);
+    /* D51: o nome precisa ser um registro */
+    CHECK(single_error(
+        "inteira principal() @ [Nada x; respost 0;]",
+        SEM_UNDECLARED_IDENTIFIER
+    ));
+    CHECK(single_error(
+        "inteira q; inteira principal() @ [q x; respost 0;]",
+        SEM_NAME_KIND_MISMATCH
+    ));
+    return true;
+}
+
+/* D50: literal maior que i32 e aviso (programa valido), nao erro. */
+static size_t warnings_of(const char *source, SemanticStatus *status)
+{
+    ParseResult parse_result;
+    SemanticAnalyzer analyzer;
+    SemanticResult result;
+    size_t count = (size_t)-1;
+
+    *status = SEMANTIC_INTERNAL_FAILURE;
+    if (analyze_source(source, &parse_result, &analyzer, &result)) {
+        *status = result.status;
+        count = result.warning_count;
+    }
+    destroy_analysis(&parse_result, &analyzer, &result);
+    return count;
+}
+
+static bool test_literal_wrap_warning(void)
+{
+    SemanticStatus status;
+
+    CHECK(warnings_of("inteira principal() @ [respost 2147483648;]",
+                      &status) == 1 && status == SEMANTIC_OK);
+    CHECK(warnings_of(
+        "inteira vet{2} doc; inteira principal() @ ["
+        "  doc{0} receba 12345678901; doc{1} receba 98765432100;"
+        "  respost 0;]",
+        &status) == 2 && status == SEMANTIC_OK);
+    /* o maior inteira cabe: sem aviso */
+    CHECK(warnings_of("inteira principal() @ [respost 2147483647;]",
+                      &status) == 0 && status == SEMANTIC_OK);
+    /* aviso nao esconde erro de verdade */
+    CHECK(warnings_of(
+        "inteira principal() @ [respost 12345678901 + naoexiste;]",
+        &status) == 1 && status == SEMANTIC_ERRORS);
     return true;
 }
 
@@ -2249,10 +2311,7 @@ static bool test_static_checks(void)
         "inteira principal() @ [flut f; f receba 1 / 0.0; respost 0;]",
         SEM_DIVISION_BY_ZERO
     ));
-    CHECK(single_error(
-        "inteira principal() @ [respost 2147483648;]",
-        SEM_LITERAL_OUT_OF_RANGE
-    ));
+    /* 2147483648 deixou de ser erro (D50): ver test_literal_wrap_warning */
     /* D38: duplocarpado / duplocarpado e duplocarpado (nao cabe em flut) */
     CHECK(single_error(
         "inteira principal() @ [duplocarpado d; flut f; f receba d / d;"
@@ -2523,6 +2582,7 @@ int main(void)
     run_test("division_hint", test_division_hint);
     run_test("symbol_table_many_names", test_symbol_table_many_names);
     run_test("records_as_types", test_records_as_types);
+    run_test("literal_wrap_warning", test_literal_wrap_warning);
     run_test("static_checks", test_static_checks);
     run_test("vector_dsl", test_vector_dsl);
     run_test("physical_io_builtins", test_physical_io_builtins);

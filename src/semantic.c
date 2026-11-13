@@ -125,6 +125,9 @@ static const char *const MESSAGE_FIELD_ON_VECTOR =
 static const char *const MESSAGE_INDEX_BOUNDS =
     "indice constante fora dos limites do vetor";
 static const char *const MESSAGE_DIVISION_ZERO = "divisao por zero constante";
+static const char *const MESSAGE_LITERAL_WRAP =
+    "literal maior que inteira (i32): o valor e reduzido modulo 2^32, "
+    "em complemento de dois (D50)";
 static const char *const MESSAGE_LITERAL_RANGE =
     "literal fora do intervalo do tipo (inteira e i32)";
 static const char *const MESSAGE_READ_SCALAR =
@@ -222,6 +225,47 @@ static bool append_diagnostic(
 
     analyzer->diagnostics[analyzer->diagnostic_count++] = *diagnostic;
     return true;
+}
+
+/*
+ * Aviso (D50): fica numa lista separada e nao torna o programa invalido.
+ * Falta de memoria aqui e falha interna, como nos diagnosticos.
+ */
+static void add_warning(
+    SemanticAnalyzer *analyzer,
+    SemanticDiagnosticCode code,
+    SourceLocation location,
+    const char *message
+)
+{
+    SemanticDiagnostic warning = {0};
+
+    if (analyzer == NULL || analyzer->fatal) {
+        return;
+    }
+    if (analyzer->warning_count == analyzer->warning_capacity) {
+        size_t capacity = analyzer->warning_capacity == 0
+                              ? SEMANTIC_INITIAL_CAPACITY
+                              : analyzer->warning_capacity * 2;
+        SemanticDiagnostic *grown;
+
+        if (analyzer->warning_capacity > SIZE_MAX / 2 ||
+            capacity > SIZE_MAX / sizeof(*analyzer->warnings)) {
+            mark_fatal(analyzer);
+            return;
+        }
+        grown = realloc(analyzer->warnings, capacity * sizeof(*grown));
+        if (grown == NULL) {
+            mark_fatal(analyzer);
+            return;
+        }
+        analyzer->warnings = grown;
+        analyzer->warning_capacity = capacity;
+    }
+    warning.code = code;
+    warning.location = location;
+    warning.message = message;
+    analyzer->warnings[analyzer->warning_count++] = warning;
 }
 
 static bool copy_bytes(
@@ -2643,13 +2687,16 @@ static SemanticType analyze_expression_kind(
         case AST_LITERAL_INTEGER: {
             long long value;
 
-            if (!ast_constant_integer(expression, &value)) {
-                add_diagnostic(
+            /* D50 (revisa D38): literal maior que i32 e aceito com aviso e
+             * reduzido modulo 2^32, como o estouro aritmetico (D43). Os
+             * programas de teste do professor guardam CPF (11 digitos) em
+             * inteira, e o PjBL 1 os aceitava. */
+            if (!ast_integer_literal_i32(expression, &value)) {
+                add_warning(
                     analyzer,
                     SEM_LITERAL_OUT_OF_RANGE,
                     expression->location,
-                    NULL,
-                    MESSAGE_LITERAL_RANGE
+                    MESSAGE_LITERAL_WRAP
                 );
             }
             return SEM_TYPE_INTEIRA;
@@ -2942,6 +2989,11 @@ static void transfer_diagnostics(
     analyzer->diagnostics = NULL;
     analyzer->diagnostic_count = 0;
     analyzer->diagnostic_capacity = 0;
+    result->warnings = analyzer->warnings;
+    result->warning_count = analyzer->warning_count;
+    analyzer->warnings = NULL;
+    analyzer->warning_count = 0;
+    analyzer->warning_capacity = 0;
 }
 
 static void destroy_diagnostics(
@@ -3261,6 +3313,7 @@ SemanticResult semantic_analyze(SemanticAnalyzer *analyzer)
         transfer_diagnostics(analyzer, &result);
     } else {
         result.status = SEMANTIC_OK;
+        transfer_diagnostics(analyzer, &result); /* leva os avisos (D50) */
     }
     return result;
 }
@@ -3279,6 +3332,7 @@ void semantic_destroy(SemanticAnalyzer *analyzer)
     }
     destroy_scope(analyzer->global_scope);
     destroy_diagnostics(analyzer->diagnostics, analyzer->diagnostic_count);
+    destroy_diagnostics(analyzer->warnings, analyzer->warning_count);
     *analyzer = (SemanticAnalyzer){0};
 }
 
@@ -3289,5 +3343,6 @@ void semantic_result_destroy(SemanticResult *result)
     }
 
     destroy_diagnostics(result->diagnostics, result->diagnostic_count);
+    destroy_diagnostics(result->warnings, result->warning_count);
     *result = (SemanticResult){0};
 }

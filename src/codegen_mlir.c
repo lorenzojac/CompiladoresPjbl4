@@ -253,16 +253,26 @@ static void literal_in_kind(
     size_t size
 )
 {
-    if (literal->as.literal.kind == AST_LITERAL_INTEGER &&
-        kind == AST_TYPE_INTEIRA) {
-        new_temp(builder, name, size);
-        strbuf_appendf(
-            builder->out,
-            "%s%s = arith.constant %s : i32\n",
-            builder->indent,
-            name,
-            literal->as.literal.lexeme
-        );
+    if (literal->as.literal.kind == AST_LITERAL_INTEGER) {
+        long long inteiro;
+        char texto[24];
+
+        /* Literal maior que i32: valor modulo 2^32, como no LLVM IR (D50);
+         * promovido a real, converte esse mesmo valor (igual ao sitofp). */
+        (void)ast_integer_literal_i32(literal, &inteiro);
+        if (kind == AST_TYPE_INTEIRA) {
+            new_temp(builder, name, size);
+            strbuf_appendf(
+                builder->out,
+                "%s%s = arith.constant %lld : i32\n",
+                builder->indent,
+                name,
+                inteiro
+            );
+            return;
+        }
+        snprintf(texto, sizeof(texto), "%lld", inteiro);
+        float_constant(builder, texto, kind, name, size);
         return;
     }
     float_constant(builder, literal->as.literal.lexeme, kind, name, size);

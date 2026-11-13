@@ -896,9 +896,15 @@ static Value emit_literal(Codegen *cg, const AstExpression *expression)
     Value value;
 
     switch (expression->as.literal.kind) {
-    case AST_LITERAL_INTEGER:
-        return constant_value(expression->as.literal.lexeme,
-                              AST_TYPE_INTEIRA);
+    case AST_LITERAL_INTEGER: {
+        /* Literal maior que i32: valor modulo 2^32 (D50; aviso na semantica). */
+        long long inteiro;
+        char texto[24];
+
+        (void)ast_integer_literal_i32(expression, &inteiro);
+        snprintf(texto, sizeof(texto), "%lld", inteiro);
+        return constant_value(texto, AST_TYPE_INTEIRA);
+    }
     case AST_LITERAL_DECIMAL:
         value = real_constant(strtod(expression->as.literal.lexeme, NULL),
                               AST_TYPE_FLUT);

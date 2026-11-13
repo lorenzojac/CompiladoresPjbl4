@@ -50,6 +50,7 @@ static bool parser_consume(
 static AstProgram *parse_program(Parser *parser);
 static AstTopLevelItem *parse_item(Parser *parser);
 static AstTopLevelItem *parse_record_item(Parser *parser);
+static AstTopLevelItem *parse_record_variable_item(Parser *parser);
 static AstTopLevelItem *parse_non_main_function_item(Parser *parser);
 static AstTopLevelItem *parse_typed_top_level_item(Parser *parser);
 static AstFunctionDecl *parse_main_after_type(
@@ -991,11 +992,50 @@ static AstTopLevelItem *parse_item(Parser *parser)
     case TOK_PALAVRA:
     case TOK_DUPLOCARPADO:
         return parse_typed_top_level_item(parser);
+    case TOK_ID:
+        return parse_record_variable_item(parser);
     default:
         add_syntax_error(parser, "item de nivel superior", MESSAGE_EXPECTED_ITEM);
         synchronize_top_level(parser);
         return NULL;
     }
+}
+
+/*
+ * D51, no nivel superior: "Cuidador responsavel;" (global do registro
+ * Cuidador, sem a palavra registro). Qualquer outro ID aqui e erro.
+ */
+static AstTopLevelItem *parse_record_variable_item(Parser *parser)
+{
+    SourceLocation location = location_of_token(&parser->current);
+    AstDeclaration *declaration;
+    AstTopLevelItem *item;
+    char *name = copy_token_lexeme(parser, &parser->current);
+
+    if (name == NULL) {
+        return NULL;
+    }
+    if (!parser_advance(parser)) {
+        free(name);
+        return NULL;
+    }
+    if (!parser_check(parser, TOK_ID) && !parser_check(parser, TOK_VET)) {
+        free(name);
+        add_syntax_error(parser, "item de nivel superior", MESSAGE_EXPECTED_ITEM);
+        synchronize_top_level(parser);
+        return NULL;
+    }
+    declaration = parse_record_declaration_after_name(parser, name, location);
+    if (declaration == NULL) {
+        return NULL;
+    }
+    item = make_top_level_item(parser, AST_TOP_DECLARATION, location);
+    if (item == NULL) {
+        ast_declaration_destroy(declaration);
+        return NULL;
+    }
+    item->as.declaration = declaration;
+    return item;
 }
 
 /*
@@ -1661,6 +1701,31 @@ static AstStatement *parse_identifier_statement(Parser *parser)
     if (!parser_advance(parser)) {
         free(name);
         return NULL;
+    }
+
+    /*
+     * D51: "Cuidador responsavel;" declara uma variavel do registro
+     * Cuidador sem a palavra registro (forma usada nos programas de teste
+     * do professor). ID seguido de ID ou de vet so pode ser declaracao; a
+     * semantica confere se o nome e mesmo um registro.
+     */
+    if (parser_check(parser, TOK_ID) || parser_check(parser, TOK_VET)) {
+        AstDeclaration *declaration = parse_record_declaration_after_name(
+            parser,
+            name,
+            location
+        );
+
+        if (declaration == NULL) {
+            return NULL;
+        }
+        statement = make_statement(parser, AST_STMT_DECLARATION, location);
+        if (statement == NULL) {
+            ast_declaration_destroy(declaration);
+            return NULL;
+        }
+        statement->as.declaration = declaration;
+        return statement;
     }
 
     if (parser_check(parser, TOK_ABRE_PAREN)) {

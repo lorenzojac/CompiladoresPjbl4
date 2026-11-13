@@ -402,6 +402,13 @@ bool ast_reference_append_argument(
  */
 bool ast_constant_integer(const AstExpression *expression, long long *out);
 
+/*
+ * Valor em inteira (i32) de um literal inteiro (D50): o texto e lido modulo
+ * 2^32 e interpretado em complemento de dois, a mesma politica do estouro
+ * aritmetico (D43). Devolve true se o literal cabe em i32 sem reducao.
+ */
+bool ast_integer_literal_i32(const AstExpression *literal, long long *out);
+
 void ast_program_destroy(AstProgram *program);
 void ast_top_level_item_destroy(AstTopLevelItem *item);
 void ast_record_decl_destroy(AstRecordDecl *record);

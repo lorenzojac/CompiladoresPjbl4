@@ -364,6 +364,29 @@ static void print_parser_report(const ParseResult *result)
     print_parser_diagnostics(result);
 }
 
+/* Avisos (D50): nao invalidam o programa; o .ll e gerado normalmente. */
+static void print_semantic_warnings(const SemanticResult *result, FILE *out)
+{
+    size_t index;
+
+    if (result->warning_count == 0) {
+        return;
+    }
+    fprintf(out, "[AVISOS SEMANTICOS]\n");
+    for (index = 0; index < result->warning_count; index++) {
+        const SemanticDiagnostic *warning = &result->warnings[index];
+
+        fprintf(
+            out,
+            "  aviso %zu. linha %zu, coluna %zu: %s\n",
+            index + 1,
+            warning->location.line,
+            warning->location.column,
+            warning->message
+        );
+    }
+}
+
 static void print_semantic_diagnostic(
     const SemanticDiagnostic *diagnostic,
     size_t index
@@ -636,10 +659,14 @@ int main(int argc, char **argv)
 
     if (!(program_valid && options.quiet)) {
         print_semantic_report(&semantic_result);
+        print_semantic_warnings(&semantic_result, stdout);
         if (options.target != SEMANTIC_TARGET_PC &&
             semantic_result.status != SEMANTIC_INTERNAL_FAILURE) {
             print_target_memory(options.target, &semantic_result);
         }
+    } else {
+        /* -q: o relatorio some, mas o aviso aparece (D50). */
+        print_semantic_warnings(&semantic_result, stderr);
     }
 
     switch (semantic_result.status) {

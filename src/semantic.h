@@ -63,7 +63,8 @@ typedef enum {
     SEM_INDEX_OUT_OF_BOUNDS,
     /* Divisor constante igual a zero (D40). */
     SEM_DIVISION_BY_ZERO,
-    /* Literal inteiro fora do intervalo de inteira (i32) (D38). */
+    /* Literal fora do intervalo do tipo (D38): erro para literal decimal
+     * maior que flut; para literal inteiro maior que i32 e so aviso (D50). */
     SEM_LITERAL_OUT_OF_RANGE,
     /* Acesso a campo inexistente ou em valor que nao e registro (D39). */
     SEM_INVALID_FIELD,
@@ -104,6 +105,9 @@ typedef struct {
     /* Bytes estimados no alvo: globais + textos, e maior quadro de funcao. */
     size_t global_bytes;
     size_t max_frame_bytes;
+    /* Avisos: nao invalidam o programa (ex.: literal reduzido a i32, D50). */
+    SemanticDiagnostic *warnings;
+    size_t warning_count;
 } SemanticResult;
 
 typedef struct {
@@ -124,6 +128,10 @@ typedef struct {
     /* Contabilidade de memoria para --alvo (tamanhos do alvo). */
     size_t global_bytes;
     size_t max_frame_bytes;
+    /* Avisos (D50): mesma estrutura dos diagnosticos, lista separada. */
+    SemanticDiagnostic *warnings;
+    size_t warning_count;
+    size_t warning_capacity;
 } SemanticAnalyzer;
 
 bool semantic_init(

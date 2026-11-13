@@ -540,6 +540,40 @@ static bool fits_i32(long long value)
     return value >= -2147483647LL - 1 && value <= 2147483647LL;
 }
 
+bool ast_integer_literal_i32(const AstExpression *literal, long long *out)
+{
+    unsigned long long reduced = 0;
+    long long exact = 0;
+    bool fits = true;
+    size_t i;
+
+    *out = 0;
+    if (literal == NULL || literal->kind != AST_EXPR_LITERAL ||
+        literal->as.literal.kind != AST_LITERAL_INTEGER ||
+        literal->as.literal.lexeme == NULL) {
+        return false;
+    }
+    for (i = 0; i < literal->as.literal.lexeme_length; i++) {
+        char digit = literal->as.literal.lexeme[i];
+
+        if (digit < '0' || digit > '9') {
+            return false;
+        }
+        /* reduzido = (reduzido * 10 + digito) mod 2^32 */
+        reduced = (reduced * 10ULL + (unsigned long long)(digit - '0')) &
+                  0xFFFFFFFFULL;
+        if (fits) {
+            exact = exact * 10 + (digit - '0');
+            if (exact > 2147483647LL) {
+                fits = false;
+            }
+        }
+    }
+    *out = reduced > 2147483647ULL ? (long long)reduced - 4294967296LL
+                                   : (long long)reduced;
+    return fits;
+}
+
 bool ast_constant_integer(const AstExpression *expression, long long *out)
 {
     long long left;
