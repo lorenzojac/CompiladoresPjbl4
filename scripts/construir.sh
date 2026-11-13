@@ -61,7 +61,9 @@ MINGW* | MSYS* | CYGWIN*) EXE=.exe ;;
 *) EXE= ;;
 esac
 
-NOME=$(basename "$PROGRAMA" .mac)
+# Nome sem a extensao (.mac do projeto ou .mcn dos testes do professor).
+NOME=$(basename "$PROGRAMA")
+NOME=${NOME%.*}
 BASE=$SAIDA/$NOME
 mkdir -p "$SAIDA"
 rm -f "$BASE.ll" "$BASE.mlir" "$BASE.nucleos.ll" "$BASE.final.ll"

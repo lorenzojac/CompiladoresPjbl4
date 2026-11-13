@@ -122,6 +122,7 @@ test-programs: $(APP_BIN)
 # --- PjBL 3: geracao de LLVM IR, execucao com lli e clang -----------------
 test-execucao: $(APP_BIN)
 	sh tests/run_execucao.sh tests/execucao
+	sh tests/run_execucao.sh tests/professor
 
 # --- PjBL 4: DSL vetorial (MLIR) e placa ----------------------------------
 # Os nucleos devem dar o mesmo resultado com e sem vetorizacao/paralelismo.
@@ -165,7 +166,7 @@ test-placa-uno: $(APP_BIN)
 test-pico: $(APP_BIN)
 	CONFIG=C0 $(PYTHON) tests/run_pico.py tests/placa tests/placa/pico
 	CONFIG=C2 $(PYTHON) tests/run_pico.py tests/placa
-	CONFIG=C0 $(PYTHON) tests/run_pico.py tests/execucao
+	CONFIG=C0 $(PYTHON) tests/run_pico.py tests/execucao tests/professor
 
 TESTES_PC = test-unit test-programs test-execucao test-dsl test-jit \
 	test-diferencial test-memoria test-placa

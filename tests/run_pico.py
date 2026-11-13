@@ -72,7 +72,7 @@ def testa_diretorio(diretorio):
     passou = falhou = 0
     for arquivo in sorted(os.listdir(diretorio)):
         programa = os.path.join(diretorio, arquivo)
-        if not arquivo.endswith(".mac") or not os.path.isfile(programa):
+        if not arquivo.endswith((".mac", ".mcn")) or not os.path.isfile(programa):
             continue
         nome = arquivo[:-4]
         construcao = subprocess.run(

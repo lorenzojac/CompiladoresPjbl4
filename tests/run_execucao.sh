@@ -57,9 +57,10 @@ executa() {
 }
 
 mkdir -p "$SAIDA"
-for programa in "$DIR"/*.mac; do
+for programa in "$DIR"/*.mac "$DIR"/*.mcn; do
     [ -f "$programa" ] || continue
-    nome=$(basename "$programa" .mac)
+    nome=$(basename "$programa")
+    nome=${nome%.*}
     esperado="$DIR/$nome.esperado"
     ENTRADA="$DIR/$nome.entrada"
 
@@ -100,9 +101,10 @@ for programa in "$DIR"/*.mac; do
 done
 
 if [ -d "$DIR/invalidos" ]; then
-    for programa in "$DIR"/invalidos/*.mac; do
+    for programa in "$DIR"/invalidos/*.mac "$DIR"/invalidos/*.mcn; do
         [ -f "$programa" ] || continue
-        nome=$(basename "$programa" .mac)
+        nome=$(basename "$programa")
+        nome=${nome%.*}
         codigo=$(cat "$DIR/invalidos/$nome.erro" 2>/dev/null)
         rm -f "$SAIDA/$nome.invalido.ll"
         "$MACARONICA" "$programa" -o "$SAIDA/$nome.invalido.ll" --alvo="$ALVO" \

@@ -441,7 +441,7 @@ um, pois não há como delimitar o "caractere". Colunas contam caracteres.
 **Consequência.** `tests/invalidos/08_identificador_acento.mac` e o teste
 `accented_identifier_single_error`.
 
-## Decisões dos PjBL 3 e 4 (D38 a D49)
+## Decisões dos PjBL 3 e 4 (D38 a D51)
 
 Detalhes e evidências em [`decisoes_backend.md`](./decisoes_backend.md),
 [`dsl.md`](./dsl.md) e [`placa.md`](./placa.md).
@@ -453,7 +453,8 @@ Detalhes e evidências em [`decisoes_backend.md`](./decisoes_backend.md),
   `duplocarpado`. O mesmo vale para `raiz`. Antes, `duplocarpado / duplocarpado`
   era `flut`, o que exigiria um `fptrunc` e perderia precisão sem aviso, contra
   o espírito da D16 (nenhum estreitamento implícito).
-- Literal inteiro fora de `i32` é `SEM_LITERAL_OUT_OF_RANGE`.
+- Literal inteiro fora de `i32` é `SEM_LITERAL_OUT_OF_RANGE`. (REVISADA pela
+  D50: virou aviso, com o valor reduzido módulo 2³².)
 - Literal decimal (tipo `flut`, D15) promovido a `duplocarpado` é convertido a
   partir do texto: `0.1` vira o double mais próximo de 0,1.
 
@@ -759,6 +760,53 @@ não liga o DTR não é reconhecido; os terminais comuns (o `miniterm` do
 pyserial, o Monitor Serial da IDE do Arduino) ligam. Para ver a saída, não
 abra a porta a 1200 baud: isso reinicia a placa em BOOTSEL.
 
+## D50 — Literal inteiro maior que `i32`: aviso, não erro (revisa D38)
+
+**Problema.** Os programas de teste do professor (defesa do PjBL 1/2,
+`tests/professor/`) guardam CPFs de 11 dígitos em `inteira`
+(`documentos{0} receba 12345678901;`). O PjBL 1 aceitava esses programas; a
+D38 passou a recusá-los (`SEM_LITERAL_OUT_OF_RANGE`), uma regressão em relação
+ao que o professor já tinha testado.
+
+**Decisão.** Literal inteiro que não cabe em `i32` é aceito com **aviso**
+(`[AVISOS SEMANTICOS]`, também com `-q`, na saída de erro), e o valor é
+**reduzido módulo 2³²** e lido em complemento de dois:
+`12345678901` vira `-539222987`. O programa continua válido e o `.ll` é gerado.
+Os dois geradores (LLVM IR e MLIR) usam o mesmo valor
+(`ast_integer_literal_i32`). Literal **decimal** maior que o máximo de `flut`
+continua erro.
+
+**Justificativa.** É a mesma política do estouro aritmético (D43): `inteira`
+é `i32` em todo alvo (D16, D45), e o que não cabe dá a volta, como no
+hardware. O aviso deixa claro que o valor mudou, sem recusar um programa que a
+especificação não proíbe (ela não fixa a largura de `inteira`).
+
+**Consequência.** `nivel4` e `nivel5` voltam a compilar e a rodar. O valor
+guardado não é o CPF original (para isso a linguagem precisaria de um inteiro
+de 64 bits). `-2147483648` também passa a ser aceito (com aviso) e dá o valor
+certo. Testes: `literal_wrap_warning` (unitário) e `tests/professor/`.
+
+## D51 — Variável de registro sem a palavra `registro`
+
+**Problema.** O `nivel3` do professor declara `Cuidador responsavel;`, só com
+o nome do registro. A D39 exigia `registro Cuidador responsavel;`, e o
+programa era rejeitado (já no PjBL 1, com "token inesperado").
+
+**Decisão.** As duas formas são aceitas, no nível superior e em blocos, para
+variável e vetor: `Cuidador x;`, `Cuidador vet{3} equipe;` e as formas com
+`registro`. No parser, um identificador seguido de outro identificador (ou de
+`vet`) só pode ser declaração: atribuição exige `receba` e chamada exige `(`.
+Por isso não há ambiguidade, e a gramática continua LL(2) nesse ponto. A
+semântica confere se o nome é mesmo um registro (`SEM_UNDECLARED_IDENTIFIER`
+ou `SEM_NAME_KIND_MISMATCH`, como na D39).
+
+**Justificativa.** É a forma que o professor usa, e é a forma de C/Java
+(`Tipo nome;`). A especificação só define a sintaxe da definição do registro,
+não a da variável.
+
+**Consequência.** O `nivel3` compila e roda. Testes: `records_as_types`
+(unitário) e `tests/professor/`.
+
 ## Registro resumido das decisões consolidadas
 
 Cada decisão abaixo registra problema, decisão, justificativa e consequência.
@@ -799,6 +847,8 @@ Cada decisão abaixo registra problema, decisão, justificativa e consequência.
 | D46 | `tipo vet{N} a, b;` | Todos os nomes são vetores de N | Forma da especificação oficial | Revisa a leitura da D05 |
 | D47 | Verificação de índice em todo acesso de laço | Análise de faixa em `repete` com limites constantes; verificação omitida quando o índice cabe em `[0, N)` | Custo zero quando provado, sem perder segurança | Complementa D40 |
 | D48 | A placa do grupo é a Raspberry Pi Pico 2 W, não o Uno | Pico 2 W como placa principal (`--alvo=pico`): `llc -mtriple=thumbv8m.main-none-eabi -mcpu=cortex-m33 -float-abi=soft` (softfp, a ABI do SDK) + Pico SDK (CMake); memória ≤ 512 KB − 64 KB; LED = pino 25; PC simula os pinos da Pico | USB nativa sem driver, 256× a RAM, FPU; segundo back-end para o mesmo IR | Revisa D44 e D45; Uno vira alvo secundário (QEMU) |
+| D50 | CPF de 11 dígitos em `inteira` nos testes do professor era recusado (D38) | Literal inteiro maior que `i32` é aceito com aviso e reduzido módulo 2³² | Mesma política do estouro (D43); o PjBL 1 aceitava | Revisa D38; `tests/professor/` |
+| D51 | `Cuidador x;` (sem `registro`) era erro de sintaxe | Aceitar `Tipo nome;` além de `registro Tipo nome;` | Forma usada pelo professor; ID ID só pode ser declaração | Complementa D39 |
 | D49 | Sem conversor USB-serial, a saída anterior à abertura do terminal se perderia | Programa espera o terminal (DTR); sem PC, roda após 3 s; fechar o terminal reinicia a placa; LED mostra o estado; 1200 baud = BOOTSEL | Mesmo modelo do Uno (abrir o monitor roda do começo), sem adaptador | `scripts/pico.py`, `make gravar`/`monitor`/`test-pico` |
 
 ## Estado final da lacuna de entrada e saída

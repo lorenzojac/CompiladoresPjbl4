@@ -89,7 +89,7 @@ def main():
     passou = falhou = 0
     tamanhos = []
     for arquivo in sorted(os.listdir(DIR)):
-        if not arquivo.endswith(".mac"):
+        if not arquivo.endswith((".mac", ".mcn")):
             continue
         nome = arquivo[:-4]
         programa = os.path.join(DIR, arquivo)

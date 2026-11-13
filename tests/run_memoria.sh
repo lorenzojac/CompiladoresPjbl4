@@ -30,7 +30,8 @@ falhas=0
 for programa in "$RAIZ"/tests/validos/*.mac "$RAIZ"/tests/invalidos/*.mac \
     "$RAIZ"/tests/execucao/*.mac "$RAIZ"/tests/dsl/*.mac \
     "$RAIZ"/tests/dsl/invalidos/*.mac "$RAIZ"/tests/placa/*.mac \
-    "$RAIZ"/tests/placa/invalidos/*.mac "$RAIZ"/tests/placa/manual/*.mac; do
+    "$RAIZ"/tests/placa/invalidos/*.mac "$RAIZ"/tests/placa/manual/*.mac \
+    "$RAIZ"/tests/professor/*.mcn; do
     [ -f "$programa" ] || continue
     for opcoes in "--alvo=pc -q" "--alvo=uno -q" "--alvo=pico -q" "--alvo=pc"; do
         # shellcheck disable=SC2086

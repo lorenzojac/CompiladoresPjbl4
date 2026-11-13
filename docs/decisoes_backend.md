@@ -2,7 +2,7 @@
 
 Este documento registra como o compilador traduz Macaronica para LLVM IR, as
 lacunas do enunciado (Seção 4.3) e as decisões adicionais tomadas pelo grupo.
-As decisões numeradas (D38 a D49) também estão resumidas em
+As decisões numeradas (D38 a D51) também estão resumidas em
 [`decisoes.md`](./decisoes.md).
 
 ## 1. Ferramentas e forma de emissão
@@ -344,7 +344,8 @@ mesmos dígitos. Valores fora da faixa da forma fixa usam notação científica
 | D40 | Erros que dá para provar na compilação | índice constante fora dos limites e divisor constante zero são erros semânticos |
 | D42 | Valor inicial de variáveis | zero, sempre que a declaração é executada (também dentro de laços) |
 | D42 | Igualdade de `palavra` | compara o conteúdo, não o endereço |
-| D38 | Literal inteiro fora de `i32` | erro semântico `SEM_LITERAL_OUT_OF_RANGE` (`-2147483648` deve ser escrito `0 - 2147483647 - 1`) |
+| D38, D50 | Literal inteiro fora de `i32` | aviso semântico; o valor é reduzido módulo 2³² em complemento de dois (`12345678901` → `-539222987`), a mesma política do estouro (D43). Antes era erro (D38); os testes do professor usam CPFs de 11 dígitos |
+| D51 | Variável de registro sem a palavra `registro` | `Cuidador x;` e `registro Cuidador x;` declaram a mesma coisa |
 | D42 | Leitura de `palavra` | `le(p)` lê a linha inteira |
 | D42 | Ordem de avaliação | da esquerda para a direita; em atribuição, o índice do destino é avaliado antes do valor |
 | D46 | `tipo vet{N} a, b;` | segue a especificação oficial ("`tipo vet{tamanho} nome, ...`"): todos os nomes são vetores de N |

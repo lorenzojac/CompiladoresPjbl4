@@ -30,7 +30,9 @@ if ! command -v "$MLIR_RUNNER" > /dev/null 2>&1 &&
     command -v "${MLIR_RUNNER%mlir-runner}mlir-cpu-runner" > /dev/null 2>&1; then
     MLIR_RUNNER=${MLIR_RUNNER%mlir-runner}mlir-cpu-runner
 fi
-NOME=$(basename "$PROGRAMA" .mac)
+# Nome sem a extensao (.mac do projeto ou .mcn dos testes do professor).
+NOME=$(basename "$PROGRAMA")
+NOME=${NOME%.*}
 
 # A biblioteca compartilhada fica sempre em build/jit (uma para todos).
 case "$(uname -s)" in

@@ -43,6 +43,7 @@ runtime/    zl_runtime.h, zl_plataforma.h, zl_runtime_comum.c, zl_runtime_posix.
 scripts/    pipeline.sh (MLIR comentado), construir.sh (.mac -> executavel), jit.sh (JIT do MLIR),
             pico.py (gravar/monitor/executa/portas da Pico), pico_sdk.sh (acha o Pico SDK), bench/ (Parte C)
 tests/      test_*.c (unitarios), validos/ invalidos/ (PjBL 1), execucao/ (PjBL 3),
+            professor/ (os 5 programas .mcn da defesa do PjBL 1/2),
             dsl/ (PjBL 4), placa/ (Parte D; placa/pico/: LED no 25, botao no GP15),
             run_*.sh/.py (automacao; run_pico.py roda na Pico real), diferencial.py
 docs/       decisoes.md, decisoes_backend.md, dsl.md, relatorio_otimizacao.md, placa.md, bench/, ir/, mlir/
@@ -227,11 +228,11 @@ Detalhes em [`docs/placa.md`](docs/placa.md) e nas decisões D48 e D49.
 | --- | --- | --- |
 | `test-lexer`, `test-parser`, `test-semantic` | 3 suítes unitárias em C | 2 371 + 8 593 + 3 349 assertions, 0 falhas |
 | `test-programs` | 8 programas válidos e 9 inválidos do PjBL 1 (códigos de saída) | 17 ok |
-| `test-execucao` | 19 programas do PjBL 3: `.ll` passa no `llvm-as` e no `opt -passes=verify`; executa com **lli** e com **clang**; as duas saídas são iguais ao `.esperado` | 19 ok |
+| `test-execucao` | 19 programas do PjBL 3 + os **5 programas de teste do professor** (defesa do PjBL 1/2, `tests/professor/*.mcn`, resultado conferido à parte): `.ll` passa no `llvm-as` e no `opt -passes=verify`; executa com **lli** e com **clang**; as duas saídas são iguais ao `.esperado` | 19 + 5 ok |
 | `test-dsl` | 7 programas da DSL vetorial em **C0, C2 e C3** (mesma saída) + 5 programas rejeitados com o código de erro esperado | 12 ok × 3 |
 | `test-jit` | os 19 programas do PjBL 3 (C0) e os da DSL (C2, C3) também pelo **executor JIT do MLIR** (`mlir-runner`, `scripts/jit.sh`) | 19 + 12 + 12 ok |
 | `test-diferencial` | 60 programas **aleatórios** válidos, comparados com um interpretador de referência em Python escrito à parte (`tests/diferencial.py`), em clang -O0, clang -O2 e lli | 60 ok (a rodada longa, `make diferencial`, passou 299 de 299) |
-| `test-memoria` | **vazamento de memória**: compilador instrumentado (`ld --wrap` de `malloc`/`free`, `tests/contador_alocacoes.c`) sobre todos os programas de teste, válidos e inválidos, nos alvos pc, uno e pico: nenhum bloco alocado fica sem `free` | 222 execuções, 0 vazamentos |
+| `test-memoria` | **vazamento de memória**: compilador instrumentado (`ld --wrap` de `malloc`/`free`, `tests/contador_alocacoes.c`) sobre todos os programas de teste, válidos e inválidos, nos alvos pc, uno e pico: nenhum bloco alocado fica sem `free` | 242 execuções, 0 vazamentos |
 | `test-placa` | programas da placa no PC (`tests/placa` e `tests/placa/pico`) + 2 rejeitados pela verificação de memória (um no `--alvo=uno`, um no `--alvo=pico`) | 8 ok |
 | `test-placa-uno` | no **Arduino Uno emulado** (QEMU, alvo secundário), construídos a partir do mesmo `.ll`: programas da placa em C0 e em C2 (núcleos vetorizados) e os 19 de `tests/execucao`; saída idêntica à do PC | 5 + 5 + 19 ok |
 
@@ -258,7 +259,7 @@ escreve `docs/bench/resultados.md` e os gráficos. Análise em
 
 | Documento | Conteúdo |
 | --- | --- |
-| [`docs/decisoes.md`](docs/decisoes.md) | Decisões D01–D49 (PjBL 1, correções, PjBL 3/4; placa Pico 2 W em D48 e D49) |
+| [`docs/decisoes.md`](docs/decisoes.md) | Decisões D01–D51 (PjBL 1, correções, PjBL 3/4; placa Pico 2 W em D48 e D49; testes do professor em D50 e D51) |
 | [`docs/decisoes_backend.md`](docs/decisoes_backend.md) | PjBL 3: tipos, construções, portabilidade, biblioteca de execução e comandos por alvo (PC, Pico 2 W, Uno), lacunas da Seção 4.3, análise de mem2reg/phi e -O2 |
 | [`docs/dsl.md`](docs/dsl.md) | PjBL 4 A: especificação formal da DSL vetorial e lacunas da Seção 5.5 |
 | [`docs/relatorio_otimizacao.md`](docs/relatorio_otimizacao.md) | PjBL 4 B e C: estratégia híbrida, pipeline, núcleo em três níveis, medições e pergunta obrigatória |
@@ -305,6 +306,7 @@ escreve `docs/bench/resultados.md` e os gráficos. Análise em
 | 2.4 Sem retorno em todos os caminhos / sem verificação de limites | `SEM_MISSING_RETURN` (D34); limites verificados (D40 e PjBL 3) |
 | 2.5 Pouco comentário, arquivos longos, busca linear | Comentários de módulo e função; índice hash na tabela de símbolos |
 | 2.6 README, `.mac` fora do `make test` | README reescrito; os programas `.mac` entram no `make test` (`test-programs`) |
+| Programas de teste da defesa do PjBL 1/2 (`nivel1` a `nivel5`) | Os 5 compilam e rodam com o resultado certo e entram no `make test` (`tests/professor/`). `Cuidador x;` sem `registro` passou a ser aceito (D51); CPF de 11 dígitos em `inteira` gera aviso e é reduzido a 32 bits, em vez de erro (D50) |
 | 2.6 Integrantes | **Pendente**: preencher a tabela "Integrantes" acima |
 
 ## Pendências do grupo antes da entrega
